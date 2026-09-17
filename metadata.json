@@ -1,0 +1,6 @@
+{
+  "name": "PakkaKhata",
+  "description": "Phone-first offline ledger for shopkeepers that connects credit obligations with payment evidence.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
