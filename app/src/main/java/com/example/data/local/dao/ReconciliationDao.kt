@@ -21,6 +21,18 @@ interface ReconciliationDao {
     @Query("SELECT * FROM reconciliations WHERE evidenceId = :evidenceId ORDER BY reconciledAt DESC")
     fun getReconciliationsByEvidence(evidenceId: Long): Flow<List<ReconciliationEntity>>
 
+    @Query("SELECT * FROM reconciliations WHERE id = :id LIMIT 1")
+    fun getReconciliationById(id: Long): Flow<ReconciliationEntity?>
+
+    @Query("SELECT * FROM reconciliations WHERE id = :id LIMIT 1")
+    suspend fun getReconciliationByIdDirect(id: Long): ReconciliationEntity?
+
+    @Query("SELECT * FROM reconciliations WHERE evidenceId = :evidenceId ORDER BY reconciledAt DESC")
+    suspend fun getReconciliationsByEvidenceDirect(evidenceId: Long): List<ReconciliationEntity>
+
+    @Query("SELECT * FROM reconciliations ORDER BY reconciledAt DESC")
+    suspend fun getAllReconciliationsDirect(): List<ReconciliationEntity>
+
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun insertReconciliation(reconciliation: ReconciliationEntity): Long
 
