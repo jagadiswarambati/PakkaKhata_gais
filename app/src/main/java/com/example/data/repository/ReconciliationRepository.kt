@@ -11,6 +11,10 @@ interface ReconciliationRepository {
     fun getAllReconciliations(): Flow<List<Reconciliation>>
     fun getReconciliationsByObligation(obligationId: Long): Flow<List<Reconciliation>>
     fun getReconciliationsByEvidence(evidenceId: Long): Flow<List<Reconciliation>>
+    fun getReconciliationById(id: Long): Flow<Reconciliation?>
+    suspend fun getReconciliationByIdDirect(id: Long): Reconciliation?
+    suspend fun getReconciliationsByEvidenceDirect(evidenceId: Long): List<Reconciliation>
+    suspend fun getAllReconciliationsDirect(): List<Reconciliation>
     suspend fun saveReconciliation(reconciliation: Reconciliation): Long
     suspend fun deleteReconciliation(reconciliation: Reconciliation)
     fun getReconciliationCount(): Flow<Int>
@@ -29,6 +33,18 @@ class ReconciliationRepositoryImpl(
 
     override fun getReconciliationsByEvidence(evidenceId: Long): Flow<List<Reconciliation>> =
         reconciliationDao.getReconciliationsByEvidence(evidenceId).map { list -> list.map { it.toDomain() } }
+
+    override fun getReconciliationById(id: Long): Flow<Reconciliation?> =
+        reconciliationDao.getReconciliationById(id).map { it?.toDomain() }
+
+    override suspend fun getReconciliationByIdDirect(id: Long): Reconciliation? =
+        reconciliationDao.getReconciliationByIdDirect(id)?.toDomain()
+
+    override suspend fun getReconciliationsByEvidenceDirect(evidenceId: Long): List<Reconciliation> =
+        reconciliationDao.getReconciliationsByEvidenceDirect(evidenceId).map { it.toDomain() }
+
+    override suspend fun getAllReconciliationsDirect(): List<Reconciliation> =
+        reconciliationDao.getAllReconciliationsDirect().map { it.toDomain() }
 
     override suspend fun saveReconciliation(reconciliation: Reconciliation): Long =
         reconciliationDao.insertReconciliation(ReconciliationEntity.fromDomain(reconciliation))
