@@ -40,7 +40,7 @@ data class SettlementExecutionParams(
         PaymentEvidenceEntity::class,
         ReconciliationEntity::class
     ],
-    version = 1,
+    version = 2,
     exportSchema = false
 )
 @TypeConverters(DatabaseConverters::class)
