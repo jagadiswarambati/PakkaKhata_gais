@@ -35,4 +35,13 @@ interface PaymentEvidenceDao {
 
     @Query("SELECT COUNT(*) FROM payment_evidences")
     fun getEvidenceCount(): Flow<Int>
+
+    @Query("UPDATE payment_evidences SET isReconciled = :isReconciled WHERE id = :evidenceId")
+    suspend fun updateReconciliationStatus(evidenceId: Long, isReconciled: Boolean)
+
+    @Query("SELECT * FROM payment_evidences WHERE isReconciled = 0 ORDER BY timestamp DESC")
+    fun getUnreconciledEvidence(): Flow<List<PaymentEvidenceEntity>>
+
+    @Query("SELECT * FROM payment_evidences WHERE isReconciled = 0 ORDER BY timestamp DESC")
+    suspend fun getUnreconciledEvidenceDirect(): List<PaymentEvidenceEntity>
 }
