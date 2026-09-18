@@ -14,6 +14,9 @@ interface PaymentEvidenceRepository {
     suspend fun saveEvidence(evidence: PaymentEvidence): Long
     suspend fun deleteEvidence(evidence: PaymentEvidence)
     fun getEvidenceCount(): Flow<Int>
+    suspend fun updateReconciliationStatus(evidenceId: Long, isReconciled: Boolean)
+    fun getUnreconciledEvidence(): Flow<List<PaymentEvidence>>
+    suspend fun getUnreconciledEvidenceDirect(): List<PaymentEvidence>
 }
 
 class PaymentEvidenceRepositoryImpl(
@@ -40,4 +43,13 @@ class PaymentEvidenceRepositoryImpl(
 
     override fun getEvidenceCount(): Flow<Int> =
         paymentEvidenceDao.getEvidenceCount()
+
+    override suspend fun updateReconciliationStatus(evidenceId: Long, isReconciled: Boolean) =
+        paymentEvidenceDao.updateReconciliationStatus(evidenceId, isReconciled)
+
+    override fun getUnreconciledEvidence(): Flow<List<PaymentEvidence>> =
+        paymentEvidenceDao.getUnreconciledEvidence().map { list -> list.map { it.toDomain() } }
+
+    override suspend fun getUnreconciledEvidenceDirect(): List<PaymentEvidence> =
+        paymentEvidenceDao.getUnreconciledEvidenceDirect().map { it.toDomain() }
 }
