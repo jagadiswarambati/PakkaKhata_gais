@@ -2,6 +2,8 @@ package com.example.data.repository
 
 import androidx.room.withTransaction
 import com.example.data.local.PakkaKhataDatabase
+import com.example.data.local.entities.CustomerEntity
+import com.example.data.local.entities.ObligationEntity
 import com.example.data.local.entities.PaymentEvidenceEntity
 import com.example.data.local.entities.ReconciliationEntity
 import com.example.domain.model.Customer
@@ -11,6 +13,7 @@ import com.example.domain.model.ObligationStatus
 import com.example.domain.model.PaymentEvidence
 import com.example.domain.model.Reconciliation
 import com.example.domain.model.SettlementOutcome
+import com.example.domain.reconciliation.NameNormalizer
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.combine
 
@@ -52,6 +55,20 @@ interface LedgerRepository {
         matchConfidence: Float,
         outcome: SettlementOutcome
     ): Result<AtomicSettlementResult>
+
+    /**
+     * Records a new open credit obligation:
+     * 1. Resolves customer by normalized name (reuses existing or inserts new).
+     * 2. Increments customer outstanding balance by the credit amount.
+     * 3. Inserts open credit obligation with original transcript and notes.
+     * Everything executes atomically inside a SQLite database transaction.
+     */
+    suspend fun recordCreditObligation(
+        customerName: String,
+        amount: Money,
+        voiceTranscript: String? = null,
+        notes: String? = null
+    ): Result<Obligation>
 }
 
 class LedgerRepositoryImpl(
@@ -73,14 +90,24 @@ class LedgerRepositoryImpl(
             val obligationEntity = database.obligationDao().getObligationByIdDirect(obligationId)
                 ?: throw IllegalArgumentException("Obligation with id $obligationId not found")
 
-            // 1. Insert PaymentEvidence
-            val evidenceEntity = PaymentEvidenceEntity.fromDomain(evidence)
-            val insertedEvidenceId = database.paymentEvidenceDao().insertEvidence(evidenceEntity)
+            if (obligationEntity.remainingAmountPaise <= 0L || obligationEntity.status == ObligationStatus.FULLY_SETTLED) {
+                throw IllegalStateException("Cannot settle an already fully settled obligation")
+            }
+
+            // 1. Insert or update PaymentEvidence marking isReconciled = true
+            val evidenceWithReconciliation = evidence.copy(isReconciled = true)
+            val evidenceEntity = PaymentEvidenceEntity.fromDomain(evidenceWithReconciliation)
+            val insertedEvidenceId = if (evidence.id > 0) {
+                database.paymentEvidenceDao().updateReconciliationStatus(evidence.id, true)
+                evidence.id
+            } else {
+                database.paymentEvidenceDao().insertEvidence(evidenceEntity)
+            }
 
             // 2. Compute and update Obligation balance & status
             val newRemainingPaise = maxOf(0L, obligationEntity.remainingAmountPaise - settledAmount.paise)
             val newStatus = when {
-                newRemainingPaise == 0L && settledAmount.paise > obligationEntity.remainingAmountPaise -> ObligationStatus.OVERPAID
+                outcome == SettlementOutcome.OVERPAID -> ObligationStatus.OVERPAID
                 newRemainingPaise == 0L -> ObligationStatus.FULLY_SETTLED
                 else -> ObligationStatus.PARTIALLY_SETTLED
             }
@@ -123,6 +150,51 @@ class LedgerRepositoryImpl(
                 remainingAmount = Money.fromPaise(newRemainingPaise),
                 outcome = outcome
             )
+        }
+    }
+
+    override suspend fun recordCreditObligation(
+        customerName: String,
+        amount: Money,
+        voiceTranscript: String?,
+        notes: String?
+    ): Result<Obligation> = runCatching {
+        require(customerName.isNotBlank()) { "Customer name cannot be empty" }
+        require(amount.isPositive) { "Credit amount must be greater than zero" }
+
+        database.withTransaction {
+            val normalized = NameNormalizer.normalize(customerName)
+            val existingCustomer = database.customerDao().getCustomerByNormalizedName(normalized)
+
+            val customerId = if (existingCustomer != null) {
+                val updatedBalancePaise = existingCustomer.currentBalancePaise + amount.paise
+                database.customerDao().updateCustomerBalance(
+                    customerId = existingCustomer.id,
+                    balancePaise = updatedBalancePaise,
+                    updatedAt = System.currentTimeMillis()
+                )
+                existingCustomer.id
+            } else {
+                val newCustomer = CustomerEntity(
+                    name = customerName.trim(),
+                    normalizedName = normalized,
+                    currentBalancePaise = amount.paise,
+                    updatedAt = System.currentTimeMillis()
+                )
+                database.customerDao().insertCustomer(newCustomer)
+            }
+
+            val obligationEntity = ObligationEntity(
+                customerId = customerId,
+                originalAmountPaise = amount.paise,
+                remainingAmountPaise = amount.paise,
+                voiceTranscript = voiceTranscript,
+                notes = notes,
+                status = ObligationStatus.OPEN,
+                createdAt = System.currentTimeMillis()
+            )
+            val obligationId = database.obligationDao().insertObligation(obligationEntity)
+            obligationEntity.copy(id = obligationId).toDomain()
         }
     }
 }
