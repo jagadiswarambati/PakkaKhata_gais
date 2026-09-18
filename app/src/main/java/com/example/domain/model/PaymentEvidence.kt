@@ -11,5 +11,6 @@ data class PaymentEvidence(
     val utrNumber: String? = null,
     val ocrRawText: String = "",
     val paymentApp: String? = null,
+    val isReconciled: Boolean = false,
     val timestamp: Long = System.currentTimeMillis()
 )
