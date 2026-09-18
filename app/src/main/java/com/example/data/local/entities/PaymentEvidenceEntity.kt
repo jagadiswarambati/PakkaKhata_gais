@@ -15,6 +15,7 @@ data class PaymentEvidenceEntity(
     val utrNumber: String? = null,
     val ocrRawText: String = "",
     val paymentApp: String? = null,
+    val isReconciled: Boolean = false,
     val timestamp: Long = System.currentTimeMillis()
 ) {
     fun toDomain(): PaymentEvidence = PaymentEvidence(
@@ -25,6 +26,7 @@ data class PaymentEvidenceEntity(
         utrNumber = utrNumber,
         ocrRawText = ocrRawText,
         paymentApp = paymentApp,
+        isReconciled = isReconciled,
         timestamp = timestamp
     )
 
@@ -37,6 +39,7 @@ data class PaymentEvidenceEntity(
             utrNumber = evidence.utrNumber,
             ocrRawText = evidence.ocrRawText,
             paymentApp = evidence.paymentApp,
+            isReconciled = evidence.isReconciled,
             timestamp = evidence.timestamp
         )
     }
