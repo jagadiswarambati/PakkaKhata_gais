@@ -25,7 +25,7 @@ data class SettlementResultUiState(
     val evidence: PaymentEvidence? = null
 )
 
-class SettlementResultViewModel(
+class SettlementResultViewModel @JvmOverloads constructor(
     application: Application,
     private val ledgerRepository: LedgerRepository = LedgerRepositoryImpl(
         PakkaKhataDatabase.getDatabase(application)
