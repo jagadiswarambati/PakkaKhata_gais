@@ -64,7 +64,7 @@ data class HomeUiState(
     val voiceCreditState: VoiceCreditUiState = VoiceCreditUiState()
 )
 
-class HomeViewModel(
+class HomeViewModel @JvmOverloads constructor(
     application: Application,
     private val ledgerRepository: LedgerRepository = LedgerRepositoryImpl(
         PakkaKhataDatabase.getDatabase(application)
