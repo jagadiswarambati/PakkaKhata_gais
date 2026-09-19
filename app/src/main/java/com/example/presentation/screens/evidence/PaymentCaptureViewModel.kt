@@ -47,7 +47,7 @@ data class PaymentCaptureUiState(
     val savedEvidenceId: Long? = null
 )
 
-class PaymentCaptureViewModel(
+class PaymentCaptureViewModel @JvmOverloads constructor(
     application: Application,
     private val ledgerRepository: LedgerRepository = LedgerRepositoryImpl(
         PakkaKhataDatabase.getDatabase(application)
