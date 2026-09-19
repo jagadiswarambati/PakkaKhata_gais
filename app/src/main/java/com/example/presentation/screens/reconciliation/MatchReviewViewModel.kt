@@ -41,7 +41,7 @@ data class MatchReviewUiState(
     val settlementSuccessReconciliationId: Long? = null
 )
 
-class MatchReviewViewModel(
+class MatchReviewViewModel @JvmOverloads constructor(
     application: Application,
     private val ledgerRepository: LedgerRepository = LedgerRepositoryImpl(
         PakkaKhataDatabase.getDatabase(application)
