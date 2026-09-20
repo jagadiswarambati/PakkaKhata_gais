@@ -48,20 +48,43 @@ data class VoiceCreditUiState(
     val successSummary: CreditSuccessSummary? = null
 )
 
+enum class LedgerFilter {
+    ALL,
+    ACTIVE_DUES,
+    SETTLED
+}
+
+data class RecentSettlementUiModel(
+    val reconciliationId: Long,
+    val customerName: String,
+    val customerId: Long,
+    val settledAmount: Money,
+    val reconciledAt: Long,
+    val outcome: com.example.domain.model.SettlementOutcome,
+    val paymentApp: String?
+)
+
 data class LedgerItemUiModel(
     val obligation: Obligation,
-    val customerName: String
+    val customerName: String,
+    val customerId: Long,
+    val customerBalance: Money
 )
 
 data class HomeUiState(
     val isDatabaseReady: Boolean = false,
     val customerCount: Int = 0,
+    val customersWithOutstandingCount: Int = 0,
     val openObligationsCount: Int = 0,
     val paymentEvidenceCount: Int = 0,
     val totalOutstanding: Money = Money.ZERO,
+    val totalSettledAmount: Money = Money.ZERO,
+    val recentlySettledCount: Int = 0,
+    val recentSettlements: List<RecentSettlementUiModel> = emptyList(),
     val recentLedgerItems: List<LedgerItemUiModel> = emptyList(),
     val unreconciledEvidences: List<com.example.domain.model.PaymentEvidence> = emptyList(),
-    val voiceCreditState: VoiceCreditUiState = VoiceCreditUiState()
+    val voiceCreditState: VoiceCreditUiState = VoiceCreditUiState(),
+    val activeFilter: LedgerFilter = LedgerFilter.ALL
 )
 
 class HomeViewModel @JvmOverloads constructor(
@@ -73,20 +96,63 @@ class HomeViewModel @JvmOverloads constructor(
 ) : AndroidViewModel(application) {
 
     private val _voiceCreditState = MutableStateFlow(VoiceCreditUiState())
+    private val _ledgerFilter = MutableStateFlow(LedgerFilter.ALL)
 
-    val uiState: StateFlow<HomeUiState> = combine(
+    private val baseDataFlow = combine(
         ledgerRepository.customerRepo.getAllCustomers(),
         ledgerRepository.obligationRepo.getAllObligations(),
-        ledgerRepository.evidenceRepo.getAllEvidence(),
-        _voiceCreditState
-    ) { customers, obligations, evidences, voiceState ->
+        ledgerRepository.evidenceRepo.getAllEvidence()
+    ) { customers, obligations, evidences ->
+        Triple(customers, obligations, evidences)
+    }
+
+    val uiState: StateFlow<HomeUiState> = combine(
+        baseDataFlow,
+        ledgerRepository.reconciliationRepo.getAllReconciliations(),
+        _voiceCreditState,
+        _ledgerFilter
+    ) { (customers, obligations, evidences), reconciliations, voiceState, filter ->
         val customerMap = customers.associateBy { it.id }
+        val obligationMap = obligations.associateBy { it.id }
+        val evidenceMap = evidences.associateBy { it.id }
+
         val openObligations = obligations.filter { it.remainingAmount.isPositive }
         val totalPaise = openObligations.sumOf { it.remainingAmount.paise }
+        val customersWithDues = customers.count { it.currentBalance.isPositive }
 
-        val recentItems = obligations.sortedByDescending { it.createdAt }.take(10).map { ob ->
-            val custName = customerMap[ob.customerId]?.name ?: "Customer #${ob.customerId}"
-            LedgerItemUiModel(obligation = ob, customerName = custName)
+        val totalSettledPaise = reconciliations.sumOf { it.settledAmount.paise }
+        val recentSettlements = reconciliations.sortedByDescending { it.reconciledAt }.take(5).map { rec ->
+            val ob = obligationMap[rec.obligationId]
+            val custName = ob?.let { customerMap[it.customerId]?.name } ?: "Customer"
+            val custId = ob?.customerId ?: 0L
+            val ev = evidenceMap[rec.evidenceId]
+            RecentSettlementUiModel(
+                reconciliationId = rec.id,
+                customerName = custName,
+                customerId = custId,
+                settledAmount = rec.settledAmount,
+                reconciledAt = rec.reconciledAt,
+                outcome = rec.matchType,
+                paymentApp = ev?.paymentApp
+            )
+        }
+
+        val filteredObligations = when (filter) {
+            LedgerFilter.ALL -> obligations.sortedByDescending { it.createdAt }
+            LedgerFilter.ACTIVE_DUES -> obligations.filter { it.remainingAmount.isPositive }.sortedByDescending { it.createdAt }
+            LedgerFilter.SETTLED -> obligations.filter { !it.remainingAmount.isPositive }.sortedByDescending { it.createdAt }
+        }
+
+        val ledgerItems = filteredObligations.map { ob ->
+            val cust = customerMap[ob.customerId]
+            val custName = cust?.name ?: "Customer #${ob.customerId}"
+            val custBalance = cust?.currentBalance ?: ob.remainingAmount
+            LedgerItemUiModel(
+                obligation = ob,
+                customerName = custName,
+                customerId = ob.customerId,
+                customerBalance = custBalance
+            )
         }
 
         val unreconciled = evidences.filter { !it.isReconciled }
@@ -94,18 +160,27 @@ class HomeViewModel @JvmOverloads constructor(
         HomeUiState(
             isDatabaseReady = true,
             customerCount = customers.size,
+            customersWithOutstandingCount = customersWithDues,
             openObligationsCount = openObligations.size,
             paymentEvidenceCount = evidences.size,
             totalOutstanding = Money.fromPaise(totalPaise),
-            recentLedgerItems = recentItems,
+            totalSettledAmount = Money.fromPaise(totalSettledPaise),
+            recentlySettledCount = reconciliations.size,
+            recentSettlements = recentSettlements,
+            recentLedgerItems = ledgerItems,
             unreconciledEvidences = unreconciled,
-            voiceCreditState = voiceState
+            voiceCreditState = voiceState,
+            activeFilter = filter
         )
     }.stateIn(
         scope = viewModelScope,
         started = SharingStarted.WhileSubscribed(5000L),
         initialValue = HomeUiState(isDatabaseReady = true)
     )
+
+    fun setLedgerFilter(filter: LedgerFilter) {
+        _ledgerFilter.value = filter
+    }
 
     fun startVoiceInput() {
         _voiceCreditState.value = VoiceCreditUiState(
