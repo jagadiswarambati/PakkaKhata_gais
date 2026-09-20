@@ -49,8 +49,27 @@ import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.domain.model.ObligationStatus
 import com.example.domain.model.SettlementOutcome
-import com.example.ui.theme.EmeraldPrimary
-import com.example.ui.theme.GoldSecondary
+import com.example.ui.theme.BackgroundDark
+import com.example.ui.theme.BorderMediumDark
+import com.example.ui.theme.BorderSubtleDark
+import com.example.ui.theme.IQOOLime
+import com.example.ui.theme.IQOOLimeContainer
+import com.example.ui.theme.IQOOOnLime
+import com.example.ui.theme.OpenRed
+import com.example.ui.theme.OpenRedContainer
+import com.example.ui.theme.OverpaidBlue
+import com.example.ui.theme.PartialAmber
+import com.example.ui.theme.PartialAmberContainer
+import com.example.ui.theme.SettledGreen
+import com.example.ui.theme.SettledGreenContainer
+import com.example.ui.theme.SurfaceCard
+import com.example.ui.theme.SurfaceCardElevated
+import com.example.ui.theme.SurfaceDark
+import com.example.ui.theme.SurfaceElevatedDark
+import com.example.ui.theme.SurfaceHigherDark
+import com.example.ui.theme.TextPrimary
+import com.example.ui.theme.TextSecondary
+import com.example.ui.theme.TextTertiary
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -67,17 +86,19 @@ fun SettlementResultScreen(
     }
 
     Scaffold(
+        containerColor = BackgroundDark,
         topBar = {
             CenterAlignedTopAppBar(
                 title = {
                     Text(
                         text = "Settlement Result",
                         style = MaterialTheme.typography.titleMedium,
-                        fontWeight = FontWeight.Bold
+                        fontWeight = FontWeight.Bold,
+                        color = TextPrimary
                     )
                 },
                 colors = TopAppBarDefaults.centerAlignedTopAppBarColors(
-                    containerColor = MaterialTheme.colorScheme.surface
+                    containerColor = SurfaceElevatedDark
                 )
             )
         },
@@ -95,12 +116,12 @@ fun SettlementResultScreen(
                         verticalArrangement = Arrangement.Center,
                         horizontalAlignment = Alignment.CenterHorizontally
                     ) {
-                        CircularProgressIndicator(color = EmeraldPrimary)
+                        CircularProgressIndicator(color = IQOOLime)
                         Spacer(modifier = Modifier.height(16.dp))
                         Text(
                             text = "Loading settlement record...",
                             style = MaterialTheme.typography.bodyMedium,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                            color = TextSecondary
                         )
                     }
                 }
@@ -116,18 +137,22 @@ fun SettlementResultScreen(
                         Icon(
                             imageVector = Icons.Default.Warning,
                             contentDescription = null,
-                            tint = MaterialTheme.colorScheme.error,
+                            tint = OpenRed,
                             modifier = Modifier.size(48.dp)
                         )
                         Spacer(modifier = Modifier.height(12.dp))
                         Text(
                             text = uiState.errorMessage ?: "Unknown error",
                             style = MaterialTheme.typography.bodyLarge,
-                            color = MaterialTheme.colorScheme.error
+                            color = OpenRed
                         )
                         Spacer(modifier = Modifier.height(16.dp))
-                        Button(onClick = onDone) {
-                            Text("Return to Ledger")
+                        Button(
+                            onClick = onDone,
+                            colors = ButtonDefaults.buttonColors(containerColor = IQOOLime, contentColor = IQOOOnLime),
+                            shape = RoundedCornerShape(14.dp)
+                        ) {
+                            Text("Return to Ledger", fontWeight = FontWeight.Bold)
                         }
                     }
                 }
@@ -146,28 +171,28 @@ fun SettlementResultScreen(
                                 .padding(20.dp),
                             horizontalAlignment = Alignment.CenterHorizontally
                         ) {
-                            Spacer(modifier = Modifier.height(8.dp))
+                            Spacer(modifier = Modifier.height(12.dp))
 
                             // Big status indicator
                             val (badgeBg, badgeFg, statusTitle) = when (reconciliation.matchType) {
                                 SettlementOutcome.FULLY_SETTLED -> Triple(
-                                    Color(0xFFDEF7EC),
-                                    Color(0xFF03543F),
+                                    SettledGreenContainer,
+                                    SettledGreen,
                                     "FULLY SETTLED"
                                 )
                                 SettlementOutcome.PARTIALLY_SETTLED -> Triple(
-                                    Color(0xFFFEF08A),
-                                    Color(0xFF713F12),
+                                    PartialAmberContainer,
+                                    PartialAmber,
                                     "PARTIALLY SETTLED"
                                 )
                                 SettlementOutcome.OVERPAID -> Triple(
-                                    Color(0xFFE1EFFE),
-                                    Color(0xFF1E429F),
+                                    SurfaceHigherDark,
+                                    OverpaidBlue,
                                     "OVERPAID"
                                 )
                                 else -> Triple(
-                                    MaterialTheme.colorScheme.surfaceVariant,
-                                    MaterialTheme.colorScheme.onSurfaceVariant,
+                                    SurfaceHigherDark,
+                                    TextSecondary,
                                     reconciliation.matchType.name
                                 )
                             }
@@ -175,7 +200,7 @@ fun SettlementResultScreen(
                             Surface(
                                 shape = CircleShape,
                                 color = badgeBg,
-                                modifier = Modifier.size(72.dp)
+                                modifier = Modifier.size(76.dp)
                             ) {
                                 Box(contentAlignment = Alignment.Center) {
                                     Icon(
@@ -184,51 +209,66 @@ fun SettlementResultScreen(
                                         } else Icons.Default.Check,
                                         contentDescription = null,
                                         tint = badgeFg,
-                                        modifier = Modifier.size(40.dp)
+                                        modifier = Modifier.size(42.dp)
                                     )
                                 }
                             }
 
-                            Spacer(modifier = Modifier.height(14.dp))
+                            Spacer(modifier = Modifier.height(16.dp))
 
+                            // Dominant settlement amounts display
                             Text(
-                                text = statusTitle,
-                                style = MaterialTheme.typography.headlineSmall,
-                                fontWeight = FontWeight.ExtraBold,
-                                color = badgeFg
+                                text = "${reconciliation.settledAmount.formatRupees()} received",
+                                style = MaterialTheme.typography.headlineMedium,
+                                fontWeight = FontWeight.Black,
+                                color = SettledGreen
                             )
 
                             Spacer(modifier = Modifier.height(4.dp))
 
                             Text(
-                                text = "${reconciliation.settledAmount.formatRupees()} received",
+                                text = "${obligation.remainingAmount.formatRupees()} remaining",
                                 style = MaterialTheme.typography.titleMedium,
                                 fontWeight = FontWeight.Bold,
-                                color = EmeraldPrimary
+                                color = if (obligation.remainingAmount.isZero) SettledGreen else OpenRed
                             )
 
-                            Text(
-                                text = "${obligation.remainingAmount.formatRupees()} remaining balance",
-                                style = MaterialTheme.typography.bodyMedium,
-                                color = MaterialTheme.colorScheme.onSurfaceVariant
-                            )
+                            Spacer(modifier = Modifier.height(12.dp))
+
+                            // Status Badge
+                            Surface(
+                                shape = RoundedCornerShape(12.dp),
+                                color = badgeBg,
+                                border = androidx.compose.foundation.BorderStroke(1.dp, badgeFg.copy(alpha = 0.5f))
+                            ) {
+                                Text(
+                                    text = statusTitle,
+                                    style = MaterialTheme.typography.labelMedium,
+                                    fontWeight = FontWeight.ExtraBold,
+                                    color = badgeFg,
+                                    letterSpacing = 1.5.sp,
+                                    modifier = Modifier.padding(horizontal = 16.dp, vertical = 6.dp)
+                                )
+                            }
 
                             Spacer(modifier = Modifier.height(24.dp))
 
                             // Detailed Summary Card
                             Card(
-                                shape = RoundedCornerShape(16.dp),
+                                shape = RoundedCornerShape(22.dp),
                                 colors = CardDefaults.cardColors(
-                                    containerColor = MaterialTheme.colorScheme.surface
+                                    containerColor = SurfaceCardElevated
                                 ),
-                                elevation = CardDefaults.cardElevation(defaultElevation = 2.dp),
+                                border = androidx.compose.foundation.BorderStroke(1.dp, BorderMediumDark),
                                 modifier = Modifier.fillMaxWidth()
                             ) {
-                                Column(modifier = Modifier.padding(18.dp)) {
+                                Column(modifier = Modifier.padding(20.dp)) {
                                     Text(
-                                        text = "Transaction Summary",
-                                        style = MaterialTheme.typography.titleSmall,
-                                        fontWeight = FontWeight.Bold
+                                        text = "TRANSACTION SUMMARY",
+                                        style = MaterialTheme.typography.labelSmall,
+                                        fontWeight = FontWeight.ExtraBold,
+                                        color = TextSecondary,
+                                        letterSpacing = 1.sp
                                     )
 
                                     Spacer(modifier = Modifier.height(14.dp))
@@ -245,12 +285,12 @@ fun SettlementResultScreen(
                                     SummaryRow(
                                         label = "Settled In Payment",
                                         value = reconciliation.settledAmount.formatRupees(),
-                                        highlightColor = EmeraldPrimary
+                                        highlightColor = SettledGreen
                                     )
                                     SummaryRow(
                                         label = "Remaining Due",
                                         value = obligation.remainingAmount.formatRupees(),
-                                        highlightColor = if (obligation.remainingAmount.isZero) EmeraldPrimary else Color(0xFFE02424)
+                                        highlightColor = if (obligation.remainingAmount.isZero) SettledGreen else OpenRed
                                     )
 
                                     if (evidence?.utrNumber != null) {
@@ -274,9 +314,10 @@ fun SettlementResultScreen(
                             Button(
                                 onClick = onDone,
                                 colors = ButtonDefaults.buttonColors(
-                                    containerColor = EmeraldPrimary
+                                    containerColor = IQOOLime,
+                                    contentColor = IQOOOnLime
                                 ),
-                                shape = RoundedCornerShape(14.dp),
+                                shape = RoundedCornerShape(16.dp),
                                 modifier = Modifier
                                     .fillMaxWidth()
                                     .height(52.dp)
@@ -288,6 +329,8 @@ fun SettlementResultScreen(
                                     fontWeight = FontWeight.Bold
                                 )
                             }
+
+                            Spacer(modifier = Modifier.height(24.dp))
                         }
                     }
                 }
@@ -306,20 +349,20 @@ private fun SummaryRow(
     Row(
         modifier = modifier
             .fillMaxWidth()
-            .padding(vertical = 6.dp),
+            .padding(vertical = 7.dp),
         horizontalArrangement = Arrangement.SpaceBetween,
         verticalAlignment = Alignment.CenterVertically
     ) {
         Text(
             text = label,
             style = MaterialTheme.typography.bodySmall,
-            color = MaterialTheme.colorScheme.onSurfaceVariant
+            color = TextSecondary
         )
         Text(
             text = value,
             style = MaterialTheme.typography.bodyMedium,
             fontWeight = FontWeight.SemiBold,
-            color = highlightColor ?: MaterialTheme.colorScheme.onSurface
+            color = highlightColor ?: TextPrimary
         )
     }
 }
