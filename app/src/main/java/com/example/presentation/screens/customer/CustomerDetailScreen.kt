@@ -16,7 +16,6 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
-import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
@@ -24,7 +23,6 @@ import androidx.compose.material.icons.automirrored.filled.ReceiptLong
 import androidx.compose.material.icons.filled.AccountBalance
 import androidx.compose.material.icons.filled.CheckCircle
 import androidx.compose.material.icons.filled.History
-import androidx.compose.material.icons.filled.Person
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CircularProgressIndicator
@@ -50,7 +48,6 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.testTag
@@ -60,29 +57,10 @@ import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.domain.model.ObligationStatus
+import com.example.presentation.screens.customer.LinkedSettlementUiModel
+import com.example.presentation.screens.customer.ObligationDetailUiModel
 import com.example.presentation.util.DateTimeFormatter
-import com.example.ui.theme.BackgroundDark
-import com.example.ui.theme.BorderAccentDark
-import com.example.ui.theme.BorderMediumDark
-import com.example.ui.theme.BorderSubtleDark
-import com.example.ui.theme.IQOOLime
-import com.example.ui.theme.IQOOLimeContainer
-import com.example.ui.theme.IQOOOnLime
-import com.example.ui.theme.OpenRed
-import com.example.ui.theme.OpenRedContainer
-import com.example.ui.theme.OverpaidBlue
-import com.example.ui.theme.PartialAmber
-import com.example.ui.theme.PartialAmberContainer
-import com.example.ui.theme.SettledGreen
-import com.example.ui.theme.SettledGreenContainer
-import com.example.ui.theme.SurfaceCard
-import com.example.ui.theme.SurfaceCardElevated
-import com.example.ui.theme.SurfaceDark
-import com.example.ui.theme.SurfaceElevatedDark
-import com.example.ui.theme.SurfaceHigherDark
-import com.example.ui.theme.TextPrimary
-import com.example.ui.theme.TextSecondary
-import com.example.ui.theme.TextTertiary
+import com.example.ui.theme.PakkaTheme
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -92,6 +70,7 @@ fun CustomerDetailScreen(
     onNavigateBack: () -> Unit = {},
     onNavigateToMatchReview: (Long) -> Unit = {}
 ) {
+    val colors = PakkaTheme.colors
     val context = LocalContext.current
     val viewModel: CustomerDetailViewModel = viewModel(
         factory = CustomerDetailViewModel.provideFactory(
@@ -106,7 +85,7 @@ fun CustomerDetailScreen(
         modifier = modifier
             .fillMaxSize()
             .testTag("customer_detail_screen"),
-        containerColor = BackgroundDark,
+        containerColor = colors.background,
         topBar = {
             TopAppBar(
                 title = {
@@ -115,12 +94,12 @@ fun CustomerDetailScreen(
                             text = uiState.customer?.name ?: "Customer Account",
                             style = MaterialTheme.typography.titleMedium,
                             fontWeight = FontWeight.Bold,
-                            color = TextPrimary
+                            color = colors.textPrimary
                         )
                         Text(
                             text = "Account Ledger & Audit History",
                             style = MaterialTheme.typography.labelSmall,
-                            color = TextSecondary
+                            color = colors.textSecondary
                         )
                     }
                 },
@@ -132,12 +111,12 @@ fun CustomerDetailScreen(
                         Icon(
                             imageVector = Icons.AutoMirrored.Filled.ArrowBack,
                             contentDescription = "Back",
-                            tint = TextPrimary
+                            tint = colors.textPrimary
                         )
                     }
                 },
                 colors = TopAppBarDefaults.topAppBarColors(
-                    containerColor = SurfaceElevatedDark
+                    containerColor = colors.surfaceElevated
                 )
             )
         }
@@ -149,7 +128,7 @@ fun CustomerDetailScreen(
                     .padding(innerPadding),
                 contentAlignment = Alignment.Center
             ) {
-                CircularProgressIndicator(color = IQOOLime)
+                CircularProgressIndicator(color = colors.limePrimary)
             }
         } else if (uiState.customer == null) {
             Box(
@@ -162,7 +141,7 @@ fun CustomerDetailScreen(
                 Text(
                     text = uiState.errorMessage ?: "Customer record not found.",
                     style = MaterialTheme.typography.bodyLarge,
-                    color = TextSecondary
+                    color = colors.textSecondary
                 )
             }
         } else {
@@ -187,20 +166,20 @@ fun CustomerDetailScreen(
                 item {
                     TabRow(
                         selectedTabIndex = selectedTab,
-                        containerColor = SurfaceHigherDark,
-                        contentColor = IQOOLime,
+                        containerColor = colors.surfaceElevated,
+                        contentColor = colors.limePrimary,
                         indicator = { tabPositions ->
                             if (selectedTab < tabPositions.size) {
                                 TabRowDefaults.SecondaryIndicator(
                                     modifier = Modifier.tabIndicatorOffset(tabPositions[selectedTab]),
-                                    color = IQOOLime,
+                                    color = colors.limePrimary,
                                     height = 3.dp
                                 )
                             }
                         },
                         modifier = Modifier
                             .clip(RoundedCornerShape(16.dp))
-                            .border(1.dp, BorderSubtleDark, RoundedCornerShape(16.dp))
+                            .border(1.dp, colors.borderSubtle, RoundedCornerShape(16.dp))
                     ) {
                         Tab(
                             selected = selectedTab == 0,
@@ -209,7 +188,7 @@ fun CustomerDetailScreen(
                                 Text(
                                     text = "Credit (${uiState.obligations.size})",
                                     fontWeight = if (selectedTab == 0) FontWeight.Bold else FontWeight.Medium,
-                                    color = if (selectedTab == 0) IQOOLime else TextSecondary,
+                                    color = if (selectedTab == 0) colors.limePrimary else colors.textSecondary,
                                     fontSize = 13.sp
                                 )
                             },
@@ -222,7 +201,7 @@ fun CustomerDetailScreen(
                                 Text(
                                     text = "Payments (${uiState.paymentHistory.size})",
                                     fontWeight = if (selectedTab == 1) FontWeight.Bold else FontWeight.Medium,
-                                    color = if (selectedTab == 1) IQOOLime else TextSecondary,
+                                    color = if (selectedTab == 1) colors.limePrimary else colors.textSecondary,
                                     fontSize = 13.sp
                                 )
                             },
@@ -267,6 +246,7 @@ fun CustomerDetailScreen(
 
 @Composable
 private fun CustomerHeroCard(uiState: CustomerDetailUiState) {
+    val colors = PakkaTheme.colors
     val isDue = uiState.currentBalance.isPositive
     val totalPaise = maxOf(1L, uiState.totalCredit.paise)
     val progressFraction = (uiState.totalReceived.paise.toFloat() / totalPaise.toFloat()).coerceIn(0f, 1f)
@@ -277,9 +257,9 @@ private fun CustomerHeroCard(uiState: CustomerDetailUiState) {
             .testTag("customer_hero_card"),
         shape = RoundedCornerShape(24.dp),
         colors = CardDefaults.cardColors(
-            containerColor = SurfaceCardElevated
+            containerColor = colors.surfaceCardElevated
         ),
-        border = androidx.compose.foundation.BorderStroke(1.dp, BorderMediumDark)
+        border = androidx.compose.foundation.BorderStroke(1.dp, colors.borderMedium)
     ) {
         Column(
             modifier = Modifier
@@ -300,14 +280,14 @@ private fun CustomerHeroCard(uiState: CustomerDetailUiState) {
                         modifier = Modifier
                             .size(46.dp)
                             .clip(RoundedCornerShape(14.dp))
-                            .background(SurfaceHigherDark),
+                            .background(colors.surfaceElevated),
                         contentAlignment = Alignment.Center
                     ) {
                         Text(
                             text = (uiState.customer?.name ?: "C").take(1).uppercase(),
                             style = MaterialTheme.typography.titleLarge,
                             fontWeight = FontWeight.ExtraBold,
-                            color = IQOOLime
+                            color = colors.limePrimary
                         )
                     }
                     Column {
@@ -315,25 +295,25 @@ private fun CustomerHeroCard(uiState: CustomerDetailUiState) {
                             text = uiState.customer?.name.orEmpty(),
                             style = MaterialTheme.typography.titleLarge,
                             fontWeight = FontWeight.ExtraBold,
-                            color = TextPrimary
+                            color = colors.textPrimary
                         )
                         Text(
                             text = "Customer Account #${uiState.customer?.id ?: 0}",
                             style = MaterialTheme.typography.labelSmall,
-                            color = TextTertiary
+                            color = colors.textTertiary
                         )
                     }
                 }
 
                 Surface(
                     shape = RoundedCornerShape(8.dp),
-                    color = if (isDue) OpenRedContainer else SettledGreenContainer
+                    color = if (isDue) colors.openRedContainer else colors.settledGreenContainer
                 ) {
                     Text(
                         text = if (isDue) "DUE PENDING" else "ALL CLEAR",
                         style = MaterialTheme.typography.labelSmall,
                         fontWeight = FontWeight.Bold,
-                        color = if (isDue) OpenRed else SettledGreen,
+                        color = if (isDue) colors.openRed else colors.settledGreen,
                         modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp),
                         fontSize = 11.sp
                     )
@@ -345,8 +325,8 @@ private fun CustomerHeroCard(uiState: CustomerDetailUiState) {
                 modifier = Modifier
                     .fillMaxWidth()
                     .clip(RoundedCornerShape(16.dp))
-                    .background(SurfaceDark)
-                    .border(1.dp, BorderSubtleDark, RoundedCornerShape(16.dp))
+                    .background(colors.surface)
+                    .border(1.dp, colors.borderSubtle, RoundedCornerShape(16.dp))
                     .padding(16.dp)
             ) {
                 Column(horizontalAlignment = Alignment.CenterHorizontally, modifier = Modifier.fillMaxWidth()) {
@@ -354,7 +334,7 @@ private fun CustomerHeroCard(uiState: CustomerDetailUiState) {
                         text = "OUTSTANDING BALANCE",
                         style = MaterialTheme.typography.labelSmall,
                         fontWeight = FontWeight.Bold,
-                        color = TextSecondary,
+                        color = colors.textSecondary,
                         letterSpacing = 1.sp
                     )
                     Spacer(modifier = Modifier.height(4.dp))
@@ -362,7 +342,7 @@ private fun CustomerHeroCard(uiState: CustomerDetailUiState) {
                         text = uiState.currentBalance.formatRupees(),
                         style = MaterialTheme.typography.headlineLarge,
                         fontWeight = FontWeight.ExtraBold,
-                        color = if (isDue) OpenRed else SettledGreen,
+                        color = if (isDue) colors.openRed else colors.settledGreen,
                         letterSpacing = (-0.5).sp,
                         fontSize = 34.sp
                     )
@@ -373,8 +353,8 @@ private fun CustomerHeroCard(uiState: CustomerDetailUiState) {
                             .fillMaxWidth(0.8f)
                             .height(4.dp)
                             .clip(RoundedCornerShape(2.dp)),
-                        color = SettledGreen,
-                        trackColor = SurfaceHigherDark,
+                        color = colors.settledGreen,
+                        trackColor = colors.surfaceElevated,
                         strokeCap = StrokeCap.Round
                     )
                 }
@@ -389,14 +369,14 @@ private fun CustomerHeroCard(uiState: CustomerDetailUiState) {
                     Text(
                         text = "Total Credit",
                         style = MaterialTheme.typography.labelSmall,
-                        color = TextTertiary,
+                        color = colors.textTertiary,
                         fontSize = 11.sp
                     )
                     Text(
                         text = uiState.totalCredit.formatRupees(),
                         style = MaterialTheme.typography.titleMedium,
                         fontWeight = FontWeight.Bold,
-                        color = TextSecondary
+                        color = colors.textSecondary
                     )
                 }
 
@@ -404,14 +384,14 @@ private fun CustomerHeroCard(uiState: CustomerDetailUiState) {
                     Text(
                         text = "Total Received",
                         style = MaterialTheme.typography.labelSmall,
-                        color = TextTertiary,
+                        color = colors.textTertiary,
                         fontSize = 11.sp
                     )
                     Text(
                         text = uiState.totalReceived.formatRupees(),
                         style = MaterialTheme.typography.titleMedium,
                         fontWeight = FontWeight.Bold,
-                        color = SettledGreen
+                        color = colors.settledGreen
                     )
                 }
 
@@ -419,14 +399,14 @@ private fun CustomerHeroCard(uiState: CustomerDetailUiState) {
                     Text(
                         text = "Remaining",
                         style = MaterialTheme.typography.labelSmall,
-                        color = TextTertiary,
+                        color = colors.textTertiary,
                         fontSize = 11.sp
                     )
                     Text(
                         text = uiState.currentBalance.formatRupees(),
                         style = MaterialTheme.typography.titleMedium,
                         fontWeight = FontWeight.ExtraBold,
-                        color = if (isDue) OpenRed else SettledGreen
+                        color = if (isDue) colors.openRed else colors.settledGreen
                     )
                 }
             }
@@ -436,6 +416,7 @@ private fun CustomerHeroCard(uiState: CustomerDetailUiState) {
 
 @Composable
 private fun CustomerObligationCard(item: ObligationDetailUiModel) {
+    val colors = PakkaTheme.colors
     val ob = item.obligation
     val receivedPaise = maxOf(0L, ob.originalAmount.paise - ob.remainingAmount.paise)
     val receivedMoney = com.example.domain.model.Money.fromPaise(receivedPaise)
@@ -446,9 +427,9 @@ private fun CustomerObligationCard(item: ObligationDetailUiModel) {
             .testTag("customer_obligation_${ob.id}"),
         shape = RoundedCornerShape(18.dp),
         colors = CardDefaults.cardColors(
-            containerColor = SurfaceCardElevated
+            containerColor = colors.surfaceCardElevated
         ),
-        border = androidx.compose.foundation.BorderStroke(1.dp, BorderSubtleDark)
+        border = androidx.compose.foundation.BorderStroke(1.dp, colors.borderSubtle)
     ) {
         Column(
             modifier = Modifier
@@ -465,24 +446,24 @@ private fun CustomerObligationCard(item: ObligationDetailUiModel) {
                     Icon(
                         imageVector = Icons.AutoMirrored.Filled.ReceiptLong,
                         contentDescription = null,
-                        tint = IQOOLime,
+                        tint = colors.limePrimary,
                         modifier = Modifier.size(20.dp)
                     )
                     Text(
                         text = ob.originalAmount.formatRupees(),
                         style = MaterialTheme.typography.titleMedium,
                         fontWeight = FontWeight.ExtraBold,
-                        color = TextPrimary
+                        color = colors.textPrimary
                     )
                 }
 
                 Surface(
                     shape = RoundedCornerShape(6.dp),
                     color = when (ob.status) {
-                        ObligationStatus.OPEN -> OpenRedContainer
-                        ObligationStatus.PARTIALLY_SETTLED -> PartialAmberContainer
-                        ObligationStatus.FULLY_SETTLED -> SettledGreenContainer
-                        ObligationStatus.OVERPAID -> SurfaceHigherDark
+                        ObligationStatus.OPEN -> colors.openRedContainer
+                        ObligationStatus.PARTIALLY_SETTLED -> colors.partialAmberContainer
+                        ObligationStatus.FULLY_SETTLED -> colors.settledGreenContainer
+                        ObligationStatus.OVERPAID -> colors.overpaidBlueContainer
                     }
                 ) {
                     Text(
@@ -495,10 +476,10 @@ private fun CustomerObligationCard(item: ObligationDetailUiModel) {
                         style = MaterialTheme.typography.labelSmall,
                         fontWeight = FontWeight.Bold,
                         color = when (ob.status) {
-                            ObligationStatus.OPEN -> OpenRed
-                            ObligationStatus.PARTIALLY_SETTLED -> PartialAmber
-                            ObligationStatus.FULLY_SETTLED -> SettledGreen
-                            ObligationStatus.OVERPAID -> OverpaidBlue
+                            ObligationStatus.OPEN -> colors.openRed
+                            ObligationStatus.PARTIALLY_SETTLED -> colors.partialAmber
+                            ObligationStatus.FULLY_SETTLED -> colors.settledGreen
+                            ObligationStatus.OVERPAID -> colors.overpaidBlue
                         },
                         modifier = Modifier.padding(horizontal = 8.dp, vertical = 3.dp),
                         fontSize = 10.sp
@@ -509,20 +490,20 @@ private fun CustomerObligationCard(item: ObligationDetailUiModel) {
             Text(
                 text = "Recorded: ${DateTimeFormatter.formatRelativeTime(ob.createdAt)}",
                 style = MaterialTheme.typography.labelSmall,
-                color = TextTertiary
+                color = colors.textTertiary
             )
 
             if (!ob.notes.isNullOrBlank()) {
                 Text(
                     text = "Note: ${ob.notes}",
                     style = MaterialTheme.typography.bodySmall,
-                    color = TextSecondary
+                    color = colors.textSecondary
                 )
             } else if (!ob.voiceTranscript.isNullOrBlank()) {
                 Text(
                     text = "\"${ob.voiceTranscript}\"",
                     style = MaterialTheme.typography.bodySmall,
-                    color = TextTertiary
+                    color = colors.textTertiary
                 )
             }
 
@@ -531,7 +512,7 @@ private fun CustomerObligationCard(item: ObligationDetailUiModel) {
                 modifier = Modifier
                     .fillMaxWidth()
                     .clip(RoundedCornerShape(10.dp))
-                    .background(SurfaceDark)
+                    .background(colors.surface)
                     .padding(horizontal = 12.dp, vertical = 8.dp),
                 horizontalArrangement = Arrangement.SpaceBetween,
                 verticalAlignment = Alignment.CenterVertically
@@ -540,13 +521,13 @@ private fun CustomerObligationCard(item: ObligationDetailUiModel) {
                     text = "Received: ${receivedMoney.formatRupees()}",
                     style = MaterialTheme.typography.bodySmall,
                     fontWeight = FontWeight.SemiBold,
-                    color = SettledGreen
+                    color = colors.settledGreen
                 )
                 Text(
                     text = "Remaining: ${ob.remainingAmount.formatRupees()}",
                     style = MaterialTheme.typography.bodySmall,
                     fontWeight = FontWeight.Bold,
-                    color = if (ob.remainingAmount.isPositive) OpenRed else SettledGreen
+                    color = if (ob.remainingAmount.isPositive) colors.openRed else colors.settledGreen
                 )
             }
 
@@ -557,7 +538,7 @@ private fun CustomerObligationCard(item: ObligationDetailUiModel) {
                     text = "Linked Settlements (${item.settlements.size}):",
                     style = MaterialTheme.typography.labelSmall,
                     fontWeight = FontWeight.Bold,
-                    color = TextSecondary
+                    color = colors.textSecondary
                 )
                 item.settlements.forEach { settlement ->
                     val appName = settlement.evidence?.paymentApp ?: "UPI"
@@ -574,14 +555,14 @@ private fun CustomerObligationCard(item: ObligationDetailUiModel) {
                         Icon(
                             imageVector = Icons.Default.CheckCircle,
                             contentDescription = null,
-                            tint = SettledGreen,
+                            tint = colors.settledGreen,
                             modifier = Modifier.size(14.dp)
                         )
                         Spacer(modifier = Modifier.width(6.dp))
                         Text(
                             text = "Settled ${settlement.reconciliation.settledAmount.formatRupees()} via $appName$utrText • $timeText",
                             style = MaterialTheme.typography.labelSmall,
-                            color = TextSecondary
+                            color = colors.textSecondary
                         )
                     }
                 }
@@ -592,6 +573,7 @@ private fun CustomerObligationCard(item: ObligationDetailUiModel) {
 
 @Composable
 private fun CustomerPaymentHistoryCard(item: LinkedSettlementUiModel) {
+    val colors = PakkaTheme.colors
     val rec = item.reconciliation
     val ev = item.evidence
     val appName = ev?.paymentApp ?: "UPI"
@@ -603,9 +585,9 @@ private fun CustomerPaymentHistoryCard(item: LinkedSettlementUiModel) {
             .testTag("payment_history_${rec.id}"),
         shape = RoundedCornerShape(18.dp),
         colors = CardDefaults.cardColors(
-            containerColor = SurfaceCardElevated
+            containerColor = colors.surfaceCardElevated
         ),
-        border = androidx.compose.foundation.BorderStroke(1.dp, BorderSubtleDark)
+        border = androidx.compose.foundation.BorderStroke(1.dp, colors.borderSubtle)
     ) {
         Row(
             modifier = Modifier
@@ -622,13 +604,13 @@ private fun CustomerPaymentHistoryCard(item: LinkedSettlementUiModel) {
                     modifier = Modifier
                         .size(40.dp)
                         .clip(RoundedCornerShape(12.dp))
-                        .background(SurfaceHigherDark),
+                        .background(colors.surfaceElevated),
                     contentAlignment = Alignment.Center
                 ) {
                     Icon(
                         imageVector = Icons.Default.AccountBalance,
                         contentDescription = null,
-                        tint = IQOOLime,
+                        tint = colors.limePrimary,
                         modifier = Modifier.size(20.dp)
                     )
                 }
@@ -638,17 +620,17 @@ private fun CustomerPaymentHistoryCard(item: LinkedSettlementUiModel) {
                             text = rec.settledAmount.formatRupees(),
                             style = MaterialTheme.typography.titleMedium,
                             fontWeight = FontWeight.ExtraBold,
-                            color = SettledGreen
+                            color = colors.settledGreen
                         )
                         Surface(
                             shape = RoundedCornerShape(4.dp),
-                            color = SurfaceHigherDark
+                            color = colors.surfaceElevated
                         ) {
                             Text(
                                 text = appName,
                                 style = MaterialTheme.typography.labelSmall,
                                 fontWeight = FontWeight.Bold,
-                                color = TextSecondary,
+                                color = colors.textSecondary,
                                 modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp),
                                 fontSize = 10.sp
                             )
@@ -658,26 +640,26 @@ private fun CustomerPaymentHistoryCard(item: LinkedSettlementUiModel) {
                         Text(
                             text = "UTR: $utr",
                             style = MaterialTheme.typography.labelSmall,
-                            color = TextTertiary
+                            color = colors.textTertiary
                         )
                     }
                     Text(
                         text = DateTimeFormatter.formatRelativeTime(rec.reconciledAt),
                         style = MaterialTheme.typography.labelSmall,
-                        color = TextTertiary
+                        color = colors.textTertiary
                     )
                 }
             }
 
             Surface(
                 shape = RoundedCornerShape(6.dp),
-                color = SettledGreenContainer
+                color = colors.settledGreenContainer
             ) {
                 Text(
                     text = "SETTLED",
                     style = MaterialTheme.typography.labelSmall,
                     fontWeight = FontWeight.Bold,
-                    color = SettledGreen,
+                    color = colors.settledGreen,
                     modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp),
                     fontSize = 10.sp
                 )
@@ -691,11 +673,12 @@ private fun EmptySectionCard(
     title: String,
     message: String
 ) {
+    val colors = PakkaTheme.colors
     Surface(
         modifier = Modifier.fillMaxWidth(),
         shape = RoundedCornerShape(16.dp),
-        color = SurfaceCard,
-        border = androidx.compose.foundation.BorderStroke(1.dp, BorderSubtleDark)
+        color = colors.surfaceCard,
+        border = androidx.compose.foundation.BorderStroke(1.dp, colors.borderSubtle)
     ) {
         Column(
             modifier = Modifier.padding(24.dp),
@@ -705,19 +688,19 @@ private fun EmptySectionCard(
             Icon(
                 imageVector = Icons.Default.History,
                 contentDescription = null,
-                tint = TextTertiary,
+                tint = colors.textTertiary,
                 modifier = Modifier.size(36.dp)
             )
             Text(
                 text = title,
                 style = MaterialTheme.typography.titleSmall,
                 fontWeight = FontWeight.Bold,
-                color = TextPrimary
+                color = colors.textPrimary
             )
             Text(
                 text = message,
                 style = MaterialTheme.typography.bodySmall,
-                color = TextSecondary
+                color = colors.textSecondary
             )
         }
     }
