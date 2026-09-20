@@ -4,7 +4,9 @@ import androidx.compose.ui.graphics.Color
 
 // =========================================================================
 // iQOO Native System Feature - Color Palette
-// Bold, dark-first, graphite surfaces, tactical neon-lime accent
+// Dynamic & Adaptive Theme Tokens:
+// When accessed in Compose, use `PakkaTheme.colors.*` for full Light/Dark support.
+// The constants below are kept for backward compatibility and default values.
 // =========================================================================
 
 // Primary iQOO Signature Accent (Electric Lime)
@@ -15,7 +17,7 @@ val IQOOLimeContainer = Color(0xFF1E2D0D)
 val IQOOOnLime = Color(0xFF091202)
 val IQOOOnLimeContainer = Color(0xFFD8FAA4)
 
-// Background & Graphite Surfaces
+// Background & Graphite Surfaces (Dark Defaults)
 val BackgroundDark = Color(0xFF070908)        // Deep near-black background
 val SurfaceDark = Color(0xFF111512)           // Base card surface
 val SurfaceElevatedDark = Color(0xFF171D19)   // Elevated card surface
@@ -23,12 +25,12 @@ val SurfaceHigherDark = Color(0xFF202822)     // Popovers, dialogs, sheets
 val SurfaceCard = Color(0xFF131814)
 val SurfaceCardElevated = Color(0xFF1A211C)
 
-// Borders & Dividers
+// Borders & Dividers (Dark Defaults)
 val BorderSubtleDark = Color(0xFF1F2922)
 val BorderMediumDark = Color(0xFF2E3D33)
 val BorderAccentDark = Color(0x33B8F34A)
 
-// Typography Colors
+// Typography Colors (Dark Defaults)
 val TextPrimary = Color(0xFFF5F7F5)
 val TextSecondary = Color(0xFF9BA49F)
 val TextTertiary = Color(0xFF68746D)
@@ -60,11 +62,11 @@ val SlateOnTertiary = Color(0xFF001E36)
 val SlateTertiaryContainer = OverpaidBlueContainer
 val SlateOnTertiaryContainer = Color(0xFFD1E4FF)
 
-// Light theme fallback (if system explicitly requests light mode)
-val BackgroundLight = Color(0xFFF6F8F6)
+// Light theme definitions
+val BackgroundLight = Color(0xFFF4F6F4)
 val OnBackgroundLight = Color(0xFF121613)
 val SurfaceLight = Color(0xFFFFFFFF)
 val OnSurfaceLight = Color(0xFF121613)
-val SurfaceVariantLight = Color(0xFFE2E7E3)
-val OnSurfaceVariantLight = Color(0xFF444D46)
-val OutlineLight = Color(0xFF747F77)
+val SurfaceVariantLight = Color(0xFFECEFEA)
+val OnSurfaceVariantLight = Color(0xFF4A554E)
+val OutlineLight = Color(0xFFCAD2C7)
