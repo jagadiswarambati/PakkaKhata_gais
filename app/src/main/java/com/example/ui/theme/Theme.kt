@@ -8,29 +8,38 @@ import androidx.compose.material3.dynamicDarkColorScheme
 import androidx.compose.material3.dynamicLightColorScheme
 import androidx.compose.material3.lightColorScheme
 import androidx.compose.runtime.Composable
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 
-private val DarkColorScheme = darkColorScheme(
-    primary = EmeraldPrimaryDark,
-    onPrimary = EmeraldOnPrimaryDark,
-    primaryContainer = EmeraldPrimaryContainerDark,
-    onPrimaryContainer = EmeraldOnPrimaryContainerDark,
-    secondary = GoldSecondaryDark,
-    onSecondary = GoldOnSecondaryDark,
-    secondaryContainer = GoldSecondaryContainerDark,
-    onSecondaryContainer = GoldOnSecondaryContainerDark,
+private val IQOODarkColorScheme = darkColorScheme(
+    primary = IQOOLime,
+    onPrimary = IQOOOnLime,
+    primaryContainer = IQOOLimeContainer,
+    onPrimaryContainer = IQOOOnLimeContainer,
+    secondary = PartialAmber,
+    onSecondary = GoldOnSecondary,
+    secondaryContainer = PartialAmberContainer,
+    onSecondaryContainer = GoldOnSecondaryContainer,
+    tertiary = SettledGreen,
+    onTertiary = Color(0xFF003822),
+    tertiaryContainer = SettledGreenContainer,
+    onTertiaryContainer = Color(0xFFA7F3D0),
     background = BackgroundDark,
-    onBackground = OnBackgroundDark,
+    onBackground = TextPrimary,
     surface = SurfaceDark,
-    onSurface = OnSurfaceDark
+    onSurface = TextPrimary,
+    surfaceVariant = SurfaceElevatedDark,
+    onSurfaceVariant = TextSecondary,
+    outline = BorderMediumDark,
+    outlineVariant = BorderSubtleDark
 )
 
-private val LightColorScheme = lightColorScheme(
-    primary = EmeraldPrimary,
-    onPrimary = EmeraldOnPrimary,
-    primaryContainer = EmeraldPrimaryContainer,
-    onPrimaryContainer = EmeraldOnPrimaryContainer,
-    secondary = GoldSecondary,
+private val IQOOLightColorScheme = lightColorScheme(
+    primary = Color(0xFF436B0B),
+    onPrimary = Color(0xFFFFFFFF),
+    primaryContainer = Color(0xFFCEF86C),
+    onPrimaryContainer = Color(0xFF132002),
+    secondary = PartialAmber,
     onSecondary = GoldOnSecondary,
     secondaryContainer = GoldSecondaryContainer,
     onSecondaryContainer = GoldOnSecondaryContainer,
@@ -49,8 +58,8 @@ private val LightColorScheme = lightColorScheme(
 
 @Composable
 fun PakkaKhataTheme(
-    darkTheme: Boolean = isSystemInDarkTheme(),
-    dynamicColor: Boolean = false, // Keep branded emerald palette by default
+    darkTheme: Boolean = true, // Dark-first iQOO system aesthetic
+    dynamicColor: Boolean = false, // Keep signature electric-lime & graphite palette
     content: @Composable () -> Unit
 ) {
     val colorScheme = when {
@@ -58,8 +67,8 @@ fun PakkaKhataTheme(
             val context = LocalContext.current
             if (darkTheme) dynamicDarkColorScheme(context) else dynamicLightColorScheme(context)
         }
-        darkTheme -> DarkColorScheme
-        else -> LightColorScheme
+        darkTheme -> IQOODarkColorScheme
+        else -> IQOOLightColorScheme
     }
 
     MaterialTheme(
@@ -74,8 +83,8 @@ fun PakkaKhataTheme(
  */
 @Composable
 fun MyApplicationTheme(
-    darkTheme: Boolean = isSystemInDarkTheme(),
-    dynamicColor: Boolean = true,
+    darkTheme: Boolean = true,
+    dynamicColor: Boolean = false,
     content: @Composable () -> Unit
 ) {
     PakkaKhataTheme(darkTheme = darkTheme, dynamicColor = dynamicColor, content = content)
