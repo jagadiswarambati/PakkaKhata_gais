@@ -6,6 +6,7 @@ import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.PickVisualMediaRequest
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -22,6 +23,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.CameraAlt
 import androidx.compose.material.icons.filled.Image
+import androidx.compose.material.icons.filled.Keyboard
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
@@ -47,10 +49,22 @@ import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import androidx.core.content.ContextCompat
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
-import com.example.ui.theme.EmeraldPrimary
+import com.example.ui.theme.BackgroundDark
+import com.example.ui.theme.BorderMediumDark
+import com.example.ui.theme.BorderSubtleDark
+import com.example.ui.theme.IQOOLime
+import com.example.ui.theme.IQOOLimeContainer
+import com.example.ui.theme.IQOOOnLime
+import com.example.ui.theme.SurfaceCardElevated
+import com.example.ui.theme.SurfaceDark
+import com.example.ui.theme.SurfaceHigherDark
+import com.example.ui.theme.TextPrimary
+import com.example.ui.theme.TextSecondary
+import com.example.ui.theme.TextTertiary
 
 @Composable
 fun PaymentEvidenceCaptureScreen(
@@ -95,6 +109,7 @@ fun PaymentEvidenceCaptureScreen(
     Box(
         modifier = modifier
             .fillMaxSize()
+            .background(BackgroundDark)
             .testTag("payment_capture_screen")
     ) {
         when (uiState.phase) {
@@ -132,7 +147,7 @@ fun PaymentEvidenceCaptureScreen(
             CaptureUiPhase.PROCESSING_OCR -> {
                 ProcessingOcrOverlay(
                     message = if (uiState.phase == CaptureUiPhase.PROCESSING_IMAGE) {
-                        "Preparing payment image..."
+                        "Preparing payment screenshot..."
                     } else {
                         "Scanning payment evidence on-device..."
                     }
@@ -180,7 +195,7 @@ private fun ProcessingOcrOverlay(message: String) {
     Box(
         modifier = Modifier
             .fillMaxSize()
-            .background(Color.Black.copy(alpha = 0.85f))
+            .background(Color(0xEE070908))
             .testTag("ocr_processing_overlay"),
         contentAlignment = Alignment.Center
     ) {
@@ -189,7 +204,7 @@ private fun ProcessingOcrOverlay(message: String) {
             modifier = Modifier.padding(32.dp)
         ) {
             CircularProgressIndicator(
-                color = EmeraldPrimary,
+                color = IQOOLime,
                 strokeWidth = 4.dp,
                 modifier = Modifier.size(56.dp)
             )
@@ -198,14 +213,14 @@ private fun ProcessingOcrOverlay(message: String) {
                 text = message,
                 style = MaterialTheme.typography.titleMedium,
                 fontWeight = FontWeight.Bold,
-                color = Color.White,
+                color = TextPrimary,
                 textAlign = TextAlign.Center
             )
             Spacer(modifier = Modifier.height(8.dp))
             Text(
-                text = "100% Offline On-Device OCR",
+                text = "100% Offline On-Device OCR Engine",
                 style = MaterialTheme.typography.bodySmall,
-                color = Color.White.copy(alpha = 0.7f)
+                color = TextSecondary
             )
         }
     }
@@ -221,7 +236,7 @@ private fun CameraPermissionFallback(
     Box(
         modifier = Modifier
             .fillMaxSize()
-            .background(MaterialTheme.colorScheme.background)
+            .background(BackgroundDark)
             .padding(24.dp)
             .testTag("camera_permission_fallback")
     ) {
@@ -231,7 +246,8 @@ private fun CameraPermissionFallback(
         ) {
             Icon(
                 imageVector = Icons.AutoMirrored.Filled.ArrowBack,
-                contentDescription = "Back"
+                contentDescription = "Back",
+                tint = TextPrimary
             )
         }
 
@@ -244,14 +260,15 @@ private fun CameraPermissionFallback(
             Box(
                 modifier = Modifier
                     .size(80.dp)
-                    .background(MaterialTheme.colorScheme.primaryContainer, CircleShape),
+                    .background(SurfaceHigherDark, CircleShape)
+                    .border(1.dp, BorderMediumDark, CircleShape),
                 contentAlignment = Alignment.Center
             ) {
                 Icon(
                     imageVector = Icons.Default.CameraAlt,
                     contentDescription = null,
-                    tint = MaterialTheme.colorScheme.onPrimaryContainer,
-                    modifier = Modifier.size(40.dp)
+                    tint = IQOOLime,
+                    modifier = Modifier.size(38.dp)
                 )
             }
 
@@ -261,7 +278,8 @@ private fun CameraPermissionFallback(
                 text = "Camera Access Needed",
                 style = MaterialTheme.typography.headlineSmall,
                 fontWeight = FontWeight.Bold,
-                textAlign = TextAlign.Center
+                textAlign = TextAlign.Center,
+                color = TextPrimary
             )
 
             Spacer(modifier = Modifier.height(8.dp))
@@ -270,34 +288,39 @@ private fun CameraPermissionFallback(
                 text = "To photograph payment confirmation screens, PakkaKhata requires camera access. You can also pick a screenshot from your gallery.",
                 style = MaterialTheme.typography.bodyMedium,
                 textAlign = TextAlign.Center,
-                color = MaterialTheme.colorScheme.onSurfaceVariant
+                color = TextSecondary
             )
 
             Spacer(modifier = Modifier.height(28.dp))
 
             Button(
                 onClick = onRequestPermission,
-                colors = ButtonDefaults.buttonColors(containerColor = EmeraldPrimary),
-                shape = RoundedCornerShape(12.dp),
+                colors = ButtonDefaults.buttonColors(
+                    containerColor = IQOOLime,
+                    contentColor = IQOOOnLime
+                ),
+                shape = RoundedCornerShape(16.dp),
                 modifier = Modifier
                     .fillMaxWidth()
-                    .height(48.dp)
+                    .height(50.dp)
                     .testTag("grant_camera_permission_button")
             ) {
-                Text("Grant Camera Permission")
+                Text("Grant Camera Permission", fontWeight = FontWeight.Bold)
             }
 
             Spacer(modifier = Modifier.height(12.dp))
 
             OutlinedButton(
                 onClick = onOpenGallery,
-                shape = RoundedCornerShape(12.dp),
+                shape = RoundedCornerShape(16.dp),
+                colors = ButtonDefaults.outlinedButtonColors(contentColor = TextPrimary),
+                border = androidx.compose.foundation.BorderStroke(1.dp, BorderMediumDark),
                 modifier = Modifier
                     .fillMaxWidth()
-                    .height(48.dp)
+                    .height(50.dp)
                     .testTag("fallback_choose_gallery_button")
             ) {
-                Icon(imageVector = Icons.Default.Image, contentDescription = null)
+                Icon(imageVector = Icons.Default.Image, contentDescription = null, tint = IQOOLime)
                 Spacer(modifier = Modifier.width(8.dp))
                 Text("Choose Screenshot from Gallery")
             }
@@ -306,12 +329,16 @@ private fun CameraPermissionFallback(
 
             OutlinedButton(
                 onClick = onManualEntry,
-                shape = RoundedCornerShape(12.dp),
+                shape = RoundedCornerShape(16.dp),
+                colors = ButtonDefaults.outlinedButtonColors(contentColor = TextPrimary),
+                border = androidx.compose.foundation.BorderStroke(1.dp, BorderMediumDark),
                 modifier = Modifier
                     .fillMaxWidth()
-                    .height(48.dp)
+                    .height(50.dp)
                     .testTag("fallback_manual_entry_button")
             ) {
+                Icon(imageVector = Icons.Default.Keyboard, contentDescription = null, tint = IQOOLime)
+                Spacer(modifier = Modifier.width(8.dp))
                 Text("Enter Payment Details Manually")
             }
         }
