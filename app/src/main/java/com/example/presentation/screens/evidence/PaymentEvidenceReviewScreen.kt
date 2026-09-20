@@ -65,9 +65,26 @@ import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import coil.compose.AsyncImage
-import com.example.ui.theme.EmeraldPrimary
-import com.example.ui.theme.GoldSecondary
+import com.example.ui.theme.BackgroundDark
+import com.example.ui.theme.BorderAccentDark
+import com.example.ui.theme.BorderMediumDark
+import com.example.ui.theme.BorderSubtleDark
+import com.example.ui.theme.IQOOLime
+import com.example.ui.theme.IQOOLimeContainer
+import com.example.ui.theme.IQOOOnLime
+import com.example.ui.theme.OpenRed
+import com.example.ui.theme.OpenRedContainer
+import com.example.ui.theme.SettledGreen
+import com.example.ui.theme.SurfaceCard
+import com.example.ui.theme.SurfaceCardElevated
+import com.example.ui.theme.SurfaceDark
+import com.example.ui.theme.SurfaceElevatedDark
+import com.example.ui.theme.SurfaceHigherDark
+import com.example.ui.theme.TextPrimary
+import com.example.ui.theme.TextSecondary
+import com.example.ui.theme.TextTertiary
 import java.io.File
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -93,12 +110,14 @@ fun PaymentEvidenceReviewScreen(
     val popularApps = listOf("Google Pay", "PhonePe", "Paytm", "BHIM", "CRED")
 
     Scaffold(
+        containerColor = BackgroundDark,
         topBar = {
             CenterAlignedTopAppBar(
                 title = {
                     Text(
                         text = if (isErrorPhase) "OCR Unsuccessful" else "Review Payment Evidence",
-                        fontWeight = FontWeight.Bold
+                        fontWeight = FontWeight.Bold,
+                        color = TextPrimary
                     )
                 },
                 navigationIcon = {
@@ -108,12 +127,13 @@ fun PaymentEvidenceReviewScreen(
                     ) {
                         Icon(
                             imageVector = Icons.AutoMirrored.Filled.ArrowBack,
-                            contentDescription = "Back"
+                            contentDescription = "Back",
+                            tint = TextPrimary
                         )
                     }
                 },
                 colors = TopAppBarDefaults.centerAlignedTopAppBarColors(
-                    containerColor = MaterialTheme.colorScheme.surface
+                    containerColor = SurfaceElevatedDark
                 )
             )
         },
@@ -131,8 +151,9 @@ fun PaymentEvidenceReviewScreen(
             if (!imagePath.isNullOrBlank()) {
                 val imageFile = remember(imagePath) { File(imagePath) }
                 Card(
-                    shape = RoundedCornerShape(16.dp),
-                    elevation = CardDefaults.cardElevation(defaultElevation = 2.dp),
+                    shape = RoundedCornerShape(20.dp),
+                    colors = CardDefaults.cardColors(containerColor = SurfaceCardElevated),
+                    border = androidx.compose.foundation.BorderStroke(1.dp, BorderMediumDark),
                     modifier = Modifier
                         .fillMaxWidth()
                         .height(180.dp)
@@ -146,15 +167,16 @@ fun PaymentEvidenceReviewScreen(
                             modifier = Modifier.fillMaxSize()
                         )
                         Surface(
-                            shape = RoundedCornerShape(topStart = 8.dp),
-                            color = Color.Black.copy(alpha = 0.65f),
+                            shape = RoundedCornerShape(topStart = 10.dp),
+                            color = SurfaceDark.copy(alpha = 0.85f),
                             modifier = Modifier.align(Alignment.BottomEnd)
                         ) {
                             Text(
-                                text = "Local On-Device Evidence",
+                                text = "On-Device Capture",
                                 style = MaterialTheme.typography.labelSmall,
-                                color = Color.White,
-                                modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp)
+                                color = TextSecondary,
+                                modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp),
+                                fontSize = 10.sp
                             )
                         }
                     }
@@ -166,9 +188,10 @@ fun PaymentEvidenceReviewScreen(
             if (isErrorPhase || errorMessage != null) {
                 Card(
                     colors = CardDefaults.cardColors(
-                        containerColor = MaterialTheme.colorScheme.errorContainer.copy(alpha = 0.8f)
+                        containerColor = OpenRedContainer
                     ),
-                    shape = RoundedCornerShape(12.dp),
+                    shape = RoundedCornerShape(14.dp),
+                    border = androidx.compose.foundation.BorderStroke(1.dp, OpenRed.copy(alpha = 0.5f)),
                     modifier = Modifier
                         .fillMaxWidth()
                         .padding(bottom = 16.dp)
@@ -181,7 +204,7 @@ fun PaymentEvidenceReviewScreen(
                         Icon(
                             imageVector = Icons.Default.Warning,
                             contentDescription = null,
-                            tint = MaterialTheme.colorScheme.error,
+                            tint = OpenRed,
                             modifier = Modifier.size(24.dp)
                         )
                         Spacer(modifier = Modifier.width(12.dp))
@@ -190,13 +213,13 @@ fun PaymentEvidenceReviewScreen(
                                 text = errorMessage ?: "Couldn't read payment details.",
                                 style = MaterialTheme.typography.bodyMedium,
                                 fontWeight = FontWeight.SemiBold,
-                                color = MaterialTheme.colorScheme.onErrorContainer
+                                color = OpenRed
                             )
                             if (isErrorPhase) {
                                 Text(
                                     text = "You can enter payment details manually or retry.",
                                     style = MaterialTheme.typography.bodySmall,
-                                    color = MaterialTheme.colorScheme.onErrorContainer
+                                    color = TextSecondary
                                 )
                             }
                         }
@@ -214,16 +237,25 @@ fun PaymentEvidenceReviewScreen(
                         onClick = onManualEntry,
                         modifier = Modifier
                             .weight(1f)
+                            .height(48.dp)
                             .testTag("btn_enter_manually"),
-                        colors = ButtonDefaults.buttonColors(containerColor = EmeraldPrimary)
+                        shape = RoundedCornerShape(14.dp),
+                        colors = ButtonDefaults.buttonColors(
+                            containerColor = IQOOLime,
+                            contentColor = IQOOOnLime
+                        )
                     ) {
-                        Text("Enter Manually")
+                        Text("Enter Manually", fontWeight = FontWeight.Bold)
                     }
                     OutlinedButton(
                         onClick = onRetake,
                         modifier = Modifier
                             .weight(1f)
-                            .testTag("btn_retake_error")
+                            .height(48.dp)
+                            .testTag("btn_retake_error"),
+                        shape = RoundedCornerShape(14.dp),
+                        colors = ButtonDefaults.outlinedButtonColors(contentColor = TextPrimary),
+                        border = androidx.compose.foundation.BorderStroke(1.dp, BorderMediumDark)
                     ) {
                         Text("Retake Photo")
                     }
@@ -233,9 +265,13 @@ fun PaymentEvidenceReviewScreen(
                     onClick = onOpenGallery,
                     modifier = Modifier
                         .fillMaxWidth()
-                        .testTag("btn_choose_gallery_error")
+                        .height(48.dp)
+                        .testTag("btn_choose_gallery_error"),
+                    shape = RoundedCornerShape(14.dp),
+                    colors = ButtonDefaults.outlinedButtonColors(contentColor = TextPrimary),
+                    border = androidx.compose.foundation.BorderStroke(1.dp, BorderMediumDark)
                 ) {
-                    Icon(imageVector = Icons.Default.Image, contentDescription = null)
+                    Icon(imageVector = Icons.Default.Image, contentDescription = null, tint = IQOOLime)
                     Spacer(modifier = Modifier.width(8.dp))
                     Text("Choose Another Image")
                 }
@@ -244,19 +280,31 @@ fun PaymentEvidenceReviewScreen(
 
             // Editable Extracted Fields Card
             Card(
-                shape = RoundedCornerShape(16.dp),
+                shape = RoundedCornerShape(22.dp),
                 colors = CardDefaults.cardColors(
-                    containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.45f)
+                    containerColor = SurfaceCardElevated
                 ),
+                border = androidx.compose.foundation.BorderStroke(1.dp, BorderMediumDark),
                 modifier = Modifier.fillMaxWidth()
             ) {
-                Column(modifier = Modifier.padding(16.dp)) {
+                Column(modifier = Modifier.padding(18.dp)) {
+                    val fieldColors = OutlinedTextFieldDefaults.colors(
+                        focusedBorderColor = IQOOLime,
+                        unfocusedBorderColor = BorderMediumDark,
+                        focusedLabelColor = IQOOLime,
+                        unfocusedLabelColor = TextSecondary,
+                        focusedTextColor = TextPrimary,
+                        unfocusedTextColor = TextPrimary,
+                        cursorColor = IQOOLime
+                    )
+
                     // Amount Field (Crucial)
                     Text(
-                        text = "Payment Amount *",
-                        style = MaterialTheme.typography.labelLarge,
-                        fontWeight = FontWeight.Bold,
-                        color = MaterialTheme.colorScheme.onSurface
+                        text = "PAYMENT AMOUNT *",
+                        style = MaterialTheme.typography.labelSmall,
+                        fontWeight = FontWeight.ExtraBold,
+                        color = TextSecondary,
+                        letterSpacing = 1.sp
                     )
                     Spacer(modifier = Modifier.height(6.dp))
                     OutlinedTextField(
@@ -267,17 +315,15 @@ fun PaymentEvidenceReviewScreen(
                                 text = "₹",
                                 style = MaterialTheme.typography.titleMedium,
                                 fontWeight = FontWeight.Bold,
-                                color = EmeraldPrimary
+                                color = IQOOLime
                             )
                         },
-                        placeholder = { Text("e.g. 500") },
+                        placeholder = { Text("e.g. 500", color = TextTertiary) },
                         keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal),
                         singleLine = true,
                         isError = extractedDetails.isAmountMissing,
-                        colors = OutlinedTextFieldDefaults.colors(
-                            focusedBorderColor = EmeraldPrimary,
-                            cursorColor = EmeraldPrimary
-                        ),
+                        colors = fieldColors,
+                        shape = RoundedCornerShape(14.dp),
                         modifier = Modifier
                             .fillMaxWidth()
                             .testTag("input_amount")
@@ -286,7 +332,7 @@ fun PaymentEvidenceReviewScreen(
                         Text(
                             text = "Amount is required to save payment evidence",
                             style = MaterialTheme.typography.bodySmall,
-                            color = MaterialTheme.colorScheme.error,
+                            color = OpenRed,
                             modifier = Modifier.padding(start = 4.dp, top = 2.dp)
                         )
                     }
@@ -295,10 +341,11 @@ fun PaymentEvidenceReviewScreen(
 
                     // Sender / Paid By Field
                     Text(
-                        text = "Paid By / Sender Name",
-                        style = MaterialTheme.typography.labelLarge,
-                        fontWeight = FontWeight.Bold,
-                        color = MaterialTheme.colorScheme.onSurface
+                        text = "PAID BY / SENDER NAME",
+                        style = MaterialTheme.typography.labelSmall,
+                        fontWeight = FontWeight.ExtraBold,
+                        color = TextSecondary,
+                        letterSpacing = 1.sp
                     )
                     Spacer(modifier = Modifier.height(6.dp))
                     OutlinedTextField(
@@ -308,11 +355,13 @@ fun PaymentEvidenceReviewScreen(
                             Icon(
                                 imageVector = Icons.Default.Person,
                                 contentDescription = null,
-                                tint = MaterialTheme.colorScheme.primary
+                                tint = IQOOLime
                             )
                         },
-                        placeholder = { Text("Sender Name (or Not detected)") },
+                        placeholder = { Text("Sender Name (or Not detected)", color = TextTertiary) },
                         singleLine = true,
+                        colors = fieldColors,
+                        shape = RoundedCornerShape(14.dp),
                         modifier = Modifier
                             .fillMaxWidth()
                             .testTag("input_sender")
@@ -322,10 +371,11 @@ fun PaymentEvidenceReviewScreen(
 
                     // UTR / Transaction ID
                     Text(
-                        text = "UPI Reference / UTR Number",
-                        style = MaterialTheme.typography.labelLarge,
-                        fontWeight = FontWeight.Bold,
-                        color = MaterialTheme.colorScheme.onSurface
+                        text = "UPI REFERENCE / UTR NUMBER",
+                        style = MaterialTheme.typography.labelSmall,
+                        fontWeight = FontWeight.ExtraBold,
+                        color = TextSecondary,
+                        letterSpacing = 1.sp
                     )
                     Spacer(modifier = Modifier.height(6.dp))
                     OutlinedTextField(
@@ -335,11 +385,13 @@ fun PaymentEvidenceReviewScreen(
                             Icon(
                                 imageVector = Icons.Default.Receipt,
                                 contentDescription = null,
-                                tint = MaterialTheme.colorScheme.primary
+                                tint = IQOOLime
                             )
                         },
-                        placeholder = { Text("12-digit UTR / Ref (or Not detected)") },
+                        placeholder = { Text("12-digit UTR / Ref (or Not detected)", color = TextTertiary) },
                         singleLine = true,
+                        colors = fieldColors,
+                        shape = RoundedCornerShape(14.dp),
                         modifier = Modifier
                             .fillMaxWidth()
                             .testTag("input_utr")
@@ -349,10 +401,11 @@ fun PaymentEvidenceReviewScreen(
 
                     // Payment Application Detected
                     Text(
-                        text = "Payment App",
-                        style = MaterialTheme.typography.labelLarge,
-                        fontWeight = FontWeight.Bold,
-                        color = MaterialTheme.colorScheme.onSurface
+                        text = "PAYMENT APP",
+                        style = MaterialTheme.typography.labelSmall,
+                        fontWeight = FontWeight.ExtraBold,
+                        color = TextSecondary,
+                        letterSpacing = 1.sp
                     )
                     Spacer(modifier = Modifier.height(6.dp))
                     Row(
@@ -368,8 +421,15 @@ fun PaymentEvidenceReviewScreen(
                                 },
                                 label = { Text(appName, style = MaterialTheme.typography.labelSmall) },
                                 colors = FilterChipDefaults.filterChipColors(
-                                    selectedContainerColor = EmeraldPrimary,
-                                    selectedLabelColor = Color.White
+                                    selectedContainerColor = IQOOLimeContainer,
+                                    selectedLabelColor = IQOOLime,
+                                    containerColor = SurfaceHigherDark,
+                                    labelColor = TextSecondary
+                                ),
+                                border = FilterChipDefaults.filterChipBorder(
+                                    enabled = true,
+                                    selected = isSelected,
+                                    borderColor = if (isSelected) IQOOLime else BorderMediumDark
                                 )
                             )
                         }
@@ -382,13 +442,14 @@ fun PaymentEvidenceReviewScreen(
             // Expandable Raw OCR Text Section
             if (extractedDetails.rawOcrText.isNotBlank()) {
                 Surface(
-                    shape = RoundedCornerShape(12.dp),
-                    color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.3f),
+                    shape = RoundedCornerShape(14.dp),
+                    color = SurfaceDark,
+                    border = androidx.compose.foundation.BorderStroke(1.dp, BorderSubtleDark),
                     modifier = Modifier
                         .fillMaxWidth()
                         .clickable { isRawOcrExpanded = !isRawOcrExpanded }
                 ) {
-                    Column(modifier = Modifier.padding(12.dp)) {
+                    Column(modifier = Modifier.padding(14.dp)) {
                         Row(
                             modifier = Modifier.fillMaxWidth(),
                             horizontalArrangement = Arrangement.SpaceBetween,
@@ -397,11 +458,13 @@ fun PaymentEvidenceReviewScreen(
                             Text(
                                 text = "Raw OCR Text",
                                 style = MaterialTheme.typography.labelMedium,
-                                fontWeight = FontWeight.SemiBold
+                                fontWeight = FontWeight.SemiBold,
+                                color = TextSecondary
                             )
                             Icon(
                                 imageVector = if (isRawOcrExpanded) Icons.Default.ExpandLess else Icons.Default.ExpandMore,
-                                contentDescription = null
+                                contentDescription = null,
+                                tint = TextSecondary
                             )
                         }
                         AnimatedVisibility(visible = isRawOcrExpanded) {
@@ -410,7 +473,7 @@ fun PaymentEvidenceReviewScreen(
                                     text = extractedDetails.rawOcrText,
                                     style = MaterialTheme.typography.bodySmall,
                                     fontFamily = FontFamily.Monospace,
-                                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                                    color = TextTertiary
                                 )
                             }
                         }
@@ -423,8 +486,11 @@ fun PaymentEvidenceReviewScreen(
             Button(
                 onClick = onConfirmAndSave,
                 enabled = extractedDetails.amountRupees.isNotBlank() && (extractedDetails.amountRupees.toDoubleOrNull() ?: 0.0) > 0.0,
-                colors = ButtonDefaults.buttonColors(containerColor = EmeraldPrimary),
-                shape = RoundedCornerShape(12.dp),
+                colors = ButtonDefaults.buttonColors(
+                    containerColor = IQOOLime,
+                    contentColor = IQOOOnLime
+                ),
+                shape = RoundedCornerShape(16.dp),
                 modifier = Modifier
                     .fillMaxWidth()
                     .height(52.dp)
@@ -434,7 +500,7 @@ fun PaymentEvidenceReviewScreen(
                 Spacer(modifier = Modifier.width(8.dp))
                 Text(
                     text = "Confirm & Save Evidence",
-                    style = MaterialTheme.typography.titleSmall,
+                    style = MaterialTheme.typography.titleMedium,
                     fontWeight = FontWeight.Bold
                 )
             }
@@ -448,27 +514,35 @@ fun PaymentEvidenceReviewScreen(
             ) {
                 OutlinedButton(
                     onClick = onRetake,
-                    shape = RoundedCornerShape(12.dp),
+                    shape = RoundedCornerShape(14.dp),
+                    colors = ButtonDefaults.outlinedButtonColors(contentColor = TextPrimary),
+                    border = androidx.compose.foundation.BorderStroke(1.dp, BorderMediumDark),
                     modifier = Modifier
                         .weight(1f)
+                        .height(48.dp)
                         .testTag("retake_photo_button")
                 ) {
-                    Icon(imageVector = Icons.Default.PhotoCamera, contentDescription = null)
+                    Icon(imageVector = Icons.Default.PhotoCamera, contentDescription = null, tint = IQOOLime)
                     Spacer(modifier = Modifier.width(6.dp))
                     Text("Retake")
                 }
                 OutlinedButton(
                     onClick = onOpenGallery,
-                    shape = RoundedCornerShape(12.dp),
+                    shape = RoundedCornerShape(14.dp),
+                    colors = ButtonDefaults.outlinedButtonColors(contentColor = TextPrimary),
+                    border = androidx.compose.foundation.BorderStroke(1.dp, BorderMediumDark),
                     modifier = Modifier
                         .weight(1f)
+                        .height(48.dp)
                         .testTag("choose_another_image_button")
                 ) {
-                    Icon(imageVector = Icons.Default.Image, contentDescription = null)
+                    Icon(imageVector = Icons.Default.Image, contentDescription = null, tint = IQOOLime)
                     Spacer(modifier = Modifier.width(6.dp))
                     Text("Gallery")
                 }
             }
+
+            Spacer(modifier = Modifier.height(24.dp))
         }
     }
 }
