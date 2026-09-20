@@ -8,6 +8,7 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
+import com.example.presentation.screens.customer.CustomerDetailScreen
 import com.example.presentation.screens.evidence.PaymentEvidenceCaptureScreen
 import com.example.presentation.screens.home.HomeScreen
 import com.example.presentation.screens.reconciliation.MatchReviewScreen
@@ -30,6 +31,9 @@ fun PakkaKhataNavGraph(
                 },
                 onNavigateToMatchReview = { evidenceId ->
                     navController.navigate(Screen.MatchReview.createRoute(evidenceId))
+                },
+                onNavigateToCustomerDetail = { customerId ->
+                    navController.navigate(Screen.CustomerDetail.createRoute(customerId))
                 }
             )
         }
@@ -71,6 +75,21 @@ fun PakkaKhataNavGraph(
                     navController.navigate(Screen.Home.route) {
                         popUpTo(Screen.Home.route) { inclusive = true }
                     }
+                }
+            )
+        }
+        composable(
+            route = Screen.CustomerDetail.route,
+            arguments = listOf(navArgument("customerId") { type = NavType.LongType })
+        ) { backStackEntry ->
+            val customerId = backStackEntry.arguments?.getLong("customerId") ?: 0L
+            CustomerDetailScreen(
+                customerId = customerId,
+                onNavigateBack = {
+                    navController.popBackStack()
+                },
+                onNavigateToMatchReview = { evidenceId ->
+                    navController.navigate(Screen.MatchReview.createRoute(evidenceId))
                 }
             )
         }
