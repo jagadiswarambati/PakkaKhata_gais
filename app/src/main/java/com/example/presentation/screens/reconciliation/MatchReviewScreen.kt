@@ -79,28 +79,7 @@ import com.example.domain.model.SettlementOutcome
 import com.example.domain.reconciliation.MatchCandidate
 import com.example.domain.reconciliation.MatchDecision
 import com.example.domain.usecase.ObligationWithCustomer
-import com.example.ui.theme.BackgroundDark
-import com.example.ui.theme.BorderAccentDark
-import com.example.ui.theme.BorderMediumDark
-import com.example.ui.theme.BorderSubtleDark
-import com.example.ui.theme.IQOOLime
-import com.example.ui.theme.IQOOLimeContainer
-import com.example.ui.theme.IQOOOnLime
-import com.example.ui.theme.OpenRed
-import com.example.ui.theme.OpenRedContainer
-import com.example.ui.theme.OverpaidBlue
-import com.example.ui.theme.PartialAmber
-import com.example.ui.theme.PartialAmberContainer
-import com.example.ui.theme.SettledGreen
-import com.example.ui.theme.SettledGreenContainer
-import com.example.ui.theme.SurfaceCard
-import com.example.ui.theme.SurfaceCardElevated
-import com.example.ui.theme.SurfaceDark
-import com.example.ui.theme.SurfaceElevatedDark
-import com.example.ui.theme.SurfaceHigherDark
-import com.example.ui.theme.TextPrimary
-import com.example.ui.theme.TextSecondary
-import com.example.ui.theme.TextTertiary
+import com.example.ui.theme.PakkaTheme
 import java.io.File
 import java.text.SimpleDateFormat
 import java.util.Date
@@ -116,6 +95,7 @@ fun MatchReviewScreen(
     viewModel: MatchReviewViewModel = viewModel()
 ) {
     val uiState by viewModel.uiState.collectAsState()
+    val colors = PakkaTheme.colors
 
     LaunchedEffect(evidenceId) {
         viewModel.load(evidenceId)
@@ -124,7 +104,7 @@ fun MatchReviewScreen(
     val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
 
     Scaffold(
-        containerColor = BackgroundDark,
+        containerColor = colors.background,
         topBar = {
             CenterAlignedTopAppBar(
                 title = {
@@ -133,12 +113,12 @@ fun MatchReviewScreen(
                             text = "Match Review & Settle",
                             style = MaterialTheme.typography.titleMedium,
                             fontWeight = FontWeight.Bold,
-                            color = TextPrimary
+                            color = colors.textPrimary
                         )
                         Text(
                             text = "Intelligent Reconciliation Engine",
                             style = MaterialTheme.typography.labelSmall,
-                            color = TextSecondary
+                            color = colors.textSecondary
                         )
                     }
                 },
@@ -147,12 +127,12 @@ fun MatchReviewScreen(
                         Icon(
                             imageVector = Icons.AutoMirrored.Filled.ArrowBack,
                             contentDescription = "Back to Ledger",
-                            tint = TextPrimary
+                            tint = colors.textPrimary
                         )
                     }
                 },
                 colors = TopAppBarDefaults.centerAlignedTopAppBarColors(
-                    containerColor = SurfaceElevatedDark
+                    containerColor = colors.surfaceElevated
                 )
             )
         },
@@ -170,12 +150,12 @@ fun MatchReviewScreen(
                         verticalArrangement = Arrangement.Center,
                         horizontalAlignment = Alignment.CenterHorizontally
                     ) {
-                        CircularProgressIndicator(color = IQOOLime)
+                        CircularProgressIndicator(color = colors.limePrimary)
                         Spacer(modifier = Modifier.height(16.dp))
                         Text(
                             text = "Evaluating open customer obligations...",
                             style = MaterialTheme.typography.bodyMedium,
-                            color = TextSecondary
+                            color = colors.textSecondary
                         )
                     }
                 }
@@ -191,19 +171,19 @@ fun MatchReviewScreen(
                         Icon(
                             imageVector = Icons.Default.Warning,
                             contentDescription = null,
-                            tint = OpenRed,
+                            tint = colors.openRed,
                             modifier = Modifier.size(48.dp)
                         )
                         Spacer(modifier = Modifier.height(12.dp))
                         Text(
                             text = uiState.errorMessage ?: "Unknown error",
                             style = MaterialTheme.typography.bodyLarge,
-                            color = OpenRed
+                            color = colors.openRed
                         )
                         Spacer(modifier = Modifier.height(16.dp))
                         Button(
                             onClick = { viewModel.load(evidenceId) },
-                            colors = ButtonDefaults.buttonColors(containerColor = IQOOLime, contentColor = IQOOOnLime),
+                            colors = ButtonDefaults.buttonColors(containerColor = colors.limePrimary, contentColor = colors.onLimePrimary),
                             shape = RoundedCornerShape(14.dp)
                         ) {
                             Text("Retry", fontWeight = FontWeight.Bold)
@@ -233,10 +213,10 @@ fun MatchReviewScreen(
                             if (uiState.settlementError != null) {
                                 Card(
                                     colors = CardDefaults.cardColors(
-                                        containerColor = OpenRedContainer
+                                        containerColor = colors.openRedContainer
                                     ),
                                     shape = RoundedCornerShape(14.dp),
-                                    border = androidx.compose.foundation.BorderStroke(1.dp, OpenRed.copy(alpha = 0.5f)),
+                                    border = androidx.compose.foundation.BorderStroke(1.dp, colors.openRed.copy(alpha = 0.5f)),
                                     modifier = Modifier.fillMaxWidth()
                                 ) {
                                     Row(
@@ -246,13 +226,13 @@ fun MatchReviewScreen(
                                         Icon(
                                             imageVector = Icons.Default.Warning,
                                             contentDescription = null,
-                                            tint = OpenRed
+                                            tint = colors.openRed
                                         )
-                                        Spacer(modifier = Modifier.width(8.dp))
+                                        Spacer(modifier = Modifier.width(10.dp))
                                         Text(
-                                            text = uiState.settlementError ?: "",
-                                            style = MaterialTheme.typography.bodySmall,
-                                            color = OpenRed
+                                            text = uiState.settlementError ?: "Settlement failed",
+                                            style = MaterialTheme.typography.bodyMedium,
+                                            color = colors.openRedText
                                         )
                                     }
                                 }
@@ -261,13 +241,13 @@ fun MatchReviewScreen(
                             // 1. Payment Received Card
                             PaymentReceivedCard(evidence = evidence)
 
-                            // Visual Innovation Connector 1: Payment -> Match
+                            // Visual Innovation Connector: Links payment directly to obligation
                             InnovationConnector(
                                 activeCandidate = uiState.activeCandidate,
                                 decision = uiState.matchDecision
                             )
 
-                            // 2. Original Credit Card
+                            // 2. Original Credit Card (Matched Obligation)
                             OriginalCreditCard(
                                 candidate = uiState.activeCandidate,
                                 onSelectObligation = { viewModel.openManualSelection() }
@@ -287,32 +267,46 @@ fun MatchReviewScreen(
                                 isDuplicate = uiState.isDuplicate,
                                 isSettling = uiState.isSettling,
                                 onConfirm = {
-                                    viewModel.confirmSettlement(onSuccess = onNavigateToSettlementResult)
+                                    viewModel.confirmSettlement(
+                                        onSuccess = { resultId ->
+                                            onNavigateToSettlementResult(resultId)
+                                        }
+                                    )
                                 },
                                 onChooseDifferent = { viewModel.openManualSelection() },
                                 onReject = { viewModel.rejectMatch() },
                                 onManualSelect = { viewModel.openManualSelection() }
                             )
-
-                            Spacer(modifier = Modifier.height(32.dp))
                         }
                     }
                 }
             }
 
-            // Manual Selection Bottom Sheet
+            // Manual Reassignment Bottom Sheet
             if (uiState.isManualSelectionOpen) {
                 ModalBottomSheet(
                     onDismissRequest = { viewModel.closeManualSelection() },
                     sheetState = sheetState,
-                    containerColor = SurfaceCardElevated,
-                    modifier = Modifier.testTag("manual_obligation_list")
+                    containerColor = colors.surfaceCardElevated,
+                    shape = RoundedCornerShape(topStart = 24.dp, topEnd = 24.dp),
+                    dragHandle = {
+                        Box(
+                            modifier = Modifier
+                                .padding(vertical = 10.dp)
+                                .width(36.dp)
+                                .height(4.dp)
+                                .clip(RoundedCornerShape(2.dp))
+                                .background(colors.borderMedium)
+                        )
+                    }
                 ) {
                     ManualReassignmentSheet(
                         obligations = uiState.availableObligations,
                         searchQuery = uiState.searchQuery,
                         onSearchChange = { viewModel.updateSearchQuery(it) },
-                        onSelect = { item -> viewModel.selectObligation(item) },
+                        onSelect = { selected ->
+                            viewModel.selectObligation(selected)
+                        },
                         onClose = { viewModel.closeManualSelection() }
                     )
                 }
@@ -331,6 +325,7 @@ private fun InnovationConnector(
     activeCandidate: MatchCandidate?,
     decision: MatchDecision
 ) {
+    val colors = PakkaTheme.colors
     val confidencePct = ((activeCandidate?.overallScore ?: 0f) * 100).toInt().coerceIn(0, 100)
 
     Column(
@@ -344,14 +339,14 @@ private fun InnovationConnector(
             modifier = Modifier
                 .width(2.dp)
                 .height(10.dp)
-                .background(IQOOLime.copy(alpha = 0.6f))
+                .background(colors.limePrimary.copy(alpha = 0.6f))
         )
 
         // Pill badge
         Surface(
             shape = RoundedCornerShape(16.dp),
-            color = SurfaceHigherDark,
-            border = androidx.compose.foundation.BorderStroke(1.dp, IQOOLime.copy(alpha = 0.4f))
+            color = colors.surfaceHigher,
+            border = androidx.compose.foundation.BorderStroke(1.dp, colors.limePrimary.copy(alpha = 0.4f))
         ) {
             Row(
                 modifier = Modifier.padding(horizontal = 14.dp, vertical = 6.dp),
@@ -361,7 +356,7 @@ private fun InnovationConnector(
                 Icon(
                     imageVector = Icons.Default.AutoAwesome,
                     contentDescription = null,
-                    tint = IQOOLime,
+                    tint = colors.limePrimary,
                     modifier = Modifier.size(15.dp)
                 )
                 Text(
@@ -372,13 +367,13 @@ private fun InnovationConnector(
                     },
                     style = MaterialTheme.typography.labelSmall,
                     fontWeight = FontWeight.Bold,
-                    color = if (activeCandidate != null) IQOOLime else TextSecondary,
+                    color = if (activeCandidate != null) colors.limePrimary else colors.textSecondary,
                     fontSize = 11.sp
                 )
                 Icon(
                     imageVector = Icons.Default.ArrowDownward,
                     contentDescription = null,
-                    tint = IQOOLime,
+                    tint = colors.limePrimary,
                     modifier = Modifier.size(14.dp)
                 )
             }
@@ -389,7 +384,7 @@ private fun InnovationConnector(
             modifier = Modifier
                 .width(2.dp)
                 .height(10.dp)
-                .background(IQOOLime.copy(alpha = 0.6f))
+                .background(colors.limePrimary.copy(alpha = 0.6f))
         )
     }
 }
@@ -399,11 +394,12 @@ fun DuplicateWarningBanner(
     warningMessage: String,
     modifier: Modifier = Modifier
 ) {
+    val colors = PakkaTheme.colors
     Card(
         colors = CardDefaults.cardColors(
-            containerColor = OpenRedContainer
+            containerColor = colors.openRedContainer
         ),
-        border = androidx.compose.foundation.BorderStroke(1.dp, OpenRed),
+        border = androidx.compose.foundation.BorderStroke(1.dp, colors.openRed),
         shape = RoundedCornerShape(14.dp),
         modifier = modifier
             .fillMaxWidth()
@@ -416,7 +412,7 @@ fun DuplicateWarningBanner(
             Icon(
                 imageVector = Icons.Default.Warning,
                 contentDescription = null,
-                tint = OpenRed,
+                tint = colors.openRed,
                 modifier = Modifier.size(24.dp)
             )
             Spacer(modifier = Modifier.width(10.dp))
@@ -425,13 +421,13 @@ fun DuplicateWarningBanner(
                     text = "Duplicate Payment Warning",
                     style = MaterialTheme.typography.titleSmall,
                     fontWeight = FontWeight.Bold,
-                    color = OpenRed
+                    color = colors.openRedText
                 )
                 Spacer(modifier = Modifier.height(4.dp))
                 Text(
                     text = warningMessage,
                     style = MaterialTheme.typography.bodySmall,
-                    color = TextSecondary
+                    color = colors.textSecondary
                 )
             }
         }
@@ -443,12 +439,14 @@ fun PaymentReceivedCard(
     evidence: PaymentEvidence,
     modifier: Modifier = Modifier
 ) {
+    val colors = PakkaTheme.colors
+
     Card(
         shape = RoundedCornerShape(22.dp),
         colors = CardDefaults.cardColors(
-            containerColor = SurfaceCardElevated
+            containerColor = colors.surfaceCardElevated
         ),
-        border = androidx.compose.foundation.BorderStroke(1.dp, BorderMediumDark),
+        border = androidx.compose.foundation.BorderStroke(1.dp, colors.borderMedium),
         modifier = modifier
             .fillMaxWidth()
             .testTag("payment_received_card")
@@ -462,14 +460,14 @@ fun PaymentReceivedCard(
                 Row(verticalAlignment = Alignment.CenterVertically) {
                     Surface(
                         shape = RoundedCornerShape(8.dp),
-                        color = IQOOLimeContainer,
+                        color = colors.limeContainer,
                         modifier = Modifier.size(28.dp)
                     ) {
                         Box(contentAlignment = Alignment.Center) {
                             Icon(
                                 imageVector = Icons.Default.Receipt,
                                 contentDescription = null,
-                                tint = IQOOLime,
+                                tint = if (colors.isDark) colors.limePrimary else colors.onLimeContainer,
                                 modifier = Modifier.size(16.dp)
                             )
                         }
@@ -479,20 +477,20 @@ fun PaymentReceivedCard(
                         text = "PAYMENT RECEIVED",
                         style = MaterialTheme.typography.labelSmall,
                         fontWeight = FontWeight.ExtraBold,
-                        color = IQOOLime,
+                        color = colors.limePrimary,
                         letterSpacing = 1.sp
                     )
                 }
 
                 Surface(
                     shape = RoundedCornerShape(6.dp),
-                    color = SurfaceHigherDark
+                    color = colors.surfaceHigher
                 ) {
                     Text(
                         text = evidence.paymentApp ?: "UPI Payment",
                         style = MaterialTheme.typography.labelSmall,
                         fontWeight = FontWeight.SemiBold,
-                        color = TextSecondary,
+                        color = colors.textSecondary,
                         modifier = Modifier.padding(horizontal = 8.dp, vertical = 3.dp),
                         fontSize = 11.sp
                     )
@@ -515,7 +513,7 @@ fun PaymentReceivedCard(
                         modifier = Modifier
                             .size(68.dp)
                             .clip(RoundedCornerShape(12.dp))
-                            .border(1.dp, BorderMediumDark, RoundedCornerShape(12.dp))
+                            .border(1.dp, colors.borderMedium, RoundedCornerShape(12.dp))
                     )
                     Spacer(modifier = Modifier.width(14.dp))
                 }
@@ -525,13 +523,13 @@ fun PaymentReceivedCard(
                         text = evidence.extractedAmount.formatRupees(),
                         style = MaterialTheme.typography.headlineMedium,
                         fontWeight = FontWeight.ExtraBold,
-                        color = IQOOLime
+                        color = colors.limePrimary
                     )
                     Text(
                         text = "Payer: ${evidence.extractedSenderName ?: "Unknown Sender"}",
                         style = MaterialTheme.typography.bodyMedium,
                         fontWeight = FontWeight.SemiBold,
-                        color = TextPrimary
+                        color = colors.textPrimary
                     )
                 }
             }
@@ -543,7 +541,7 @@ fun PaymentReceivedCard(
                 modifier = Modifier
                     .fillMaxWidth()
                     .clip(RoundedCornerShape(12.dp))
-                    .background(SurfaceDark)
+                    .background(colors.surface)
                     .padding(horizontal = 12.dp, vertical = 8.dp),
                 horizontalArrangement = Arrangement.SpaceBetween
             ) {
@@ -551,28 +549,28 @@ fun PaymentReceivedCard(
                     Text(
                         text = "UTR / Reference",
                         style = MaterialTheme.typography.labelSmall,
-                        color = TextTertiary,
+                        color = colors.textTertiary,
                         fontSize = 10.sp
                     )
                     Text(
                         text = evidence.utrNumber ?: "Not Available",
                         style = MaterialTheme.typography.bodySmall,
                         fontWeight = FontWeight.SemiBold,
-                        color = TextSecondary
+                        color = colors.textSecondary
                     )
                 }
                 Column(horizontalAlignment = Alignment.End) {
                     Text(
                         text = "Received At",
                         style = MaterialTheme.typography.labelSmall,
-                        color = TextTertiary,
+                        color = colors.textTertiary,
                         fontSize = 10.sp
                     )
                     Text(
                         text = evidence.timestamp.formatDateTime(),
                         style = MaterialTheme.typography.bodySmall,
                         fontWeight = FontWeight.Medium,
-                        color = TextSecondary
+                        color = colors.textSecondary
                     )
                 }
             }
@@ -586,12 +584,14 @@ fun OriginalCreditCard(
     onSelectObligation: () -> Unit,
     modifier: Modifier = Modifier
 ) {
+    val colors = PakkaTheme.colors
+
     Card(
         shape = RoundedCornerShape(22.dp),
         colors = CardDefaults.cardColors(
-            containerColor = SurfaceCardElevated
+            containerColor = colors.surfaceCardElevated
         ),
-        border = androidx.compose.foundation.BorderStroke(1.dp, BorderMediumDark),
+        border = androidx.compose.foundation.BorderStroke(1.dp, colors.borderMedium),
         modifier = modifier
             .fillMaxWidth()
             .testTag("original_credit_card")
@@ -605,14 +605,14 @@ fun OriginalCreditCard(
                 Row(verticalAlignment = Alignment.CenterVertically) {
                     Surface(
                         shape = RoundedCornerShape(8.dp),
-                        color = PartialAmberContainer,
+                        color = colors.partialAmberContainer,
                         modifier = Modifier.size(28.dp)
                     ) {
                         Box(contentAlignment = Alignment.Center) {
                             Icon(
                                 imageVector = Icons.Default.AccountBalance,
                                 contentDescription = null,
-                                tint = PartialAmber,
+                                tint = colors.partialAmber,
                                 modifier = Modifier.size(16.dp)
                             )
                         }
@@ -622,7 +622,7 @@ fun OriginalCreditCard(
                         text = "ORIGINAL CREDIT",
                         style = MaterialTheme.typography.labelSmall,
                         fontWeight = FontWeight.ExtraBold,
-                        color = PartialAmber,
+                        color = colors.partialAmber,
                         letterSpacing = 1.sp
                     )
                 }
@@ -631,10 +631,10 @@ fun OriginalCreditCard(
                     Surface(
                         shape = RoundedCornerShape(6.dp),
                         color = when (candidate.obligation.status) {
-                            ObligationStatus.OPEN -> OpenRedContainer
-                            ObligationStatus.PARTIALLY_SETTLED -> PartialAmberContainer
-                            ObligationStatus.FULLY_SETTLED -> SettledGreenContainer
-                            ObligationStatus.OVERPAID -> SurfaceHigherDark
+                            ObligationStatus.OPEN -> colors.openRedContainer
+                            ObligationStatus.PARTIALLY_SETTLED -> colors.partialAmberContainer
+                            ObligationStatus.FULLY_SETTLED -> colors.settledGreenContainer
+                            ObligationStatus.OVERPAID -> colors.surfaceHigher
                         }
                     ) {
                         Text(
@@ -642,10 +642,10 @@ fun OriginalCreditCard(
                             style = MaterialTheme.typography.labelSmall,
                             fontWeight = FontWeight.Bold,
                             color = when (candidate.obligation.status) {
-                                ObligationStatus.OPEN -> OpenRed
-                                ObligationStatus.PARTIALLY_SETTLED -> PartialAmber
-                                ObligationStatus.FULLY_SETTLED -> SettledGreen
-                                ObligationStatus.OVERPAID -> OverpaidBlue
+                                ObligationStatus.OPEN -> colors.openRedText
+                                ObligationStatus.PARTIALLY_SETTLED -> colors.partialAmberText
+                                ObligationStatus.FULLY_SETTLED -> colors.settledGreenText
+                                ObligationStatus.OVERPAID -> colors.overpaidBlueText
                             },
                             modifier = Modifier
                                 .padding(horizontal = 8.dp, vertical = 3.dp)
@@ -668,14 +668,14 @@ fun OriginalCreditCard(
                 ) {
                     Surface(
                         shape = RoundedCornerShape(12.dp),
-                        color = SurfaceHigherDark,
+                        color = colors.surfaceHigher,
                         modifier = Modifier.size(44.dp)
                     ) {
                         Box(contentAlignment = Alignment.Center) {
                             Icon(
                                 imageVector = Icons.Default.Person,
                                 contentDescription = null,
-                                tint = IQOOLime
+                                tint = colors.limePrimary
                             )
                         }
                     }
@@ -685,12 +685,12 @@ fun OriginalCreditCard(
                             text = customer.name,
                             style = MaterialTheme.typography.titleMedium,
                             fontWeight = FontWeight.ExtraBold,
-                            color = TextPrimary
+                            color = colors.textPrimary
                         )
                         Text(
                             text = "Ledger Balance: ${customer.currentBalance.formatRupees()}",
                             style = MaterialTheme.typography.bodySmall,
-                            color = TextSecondary
+                            color = colors.textSecondary
                         )
                     }
                 }
@@ -701,7 +701,7 @@ fun OriginalCreditCard(
                     modifier = Modifier
                         .fillMaxWidth()
                         .clip(RoundedCornerShape(12.dp))
-                        .background(SurfaceDark)
+                        .background(colors.surface)
                         .padding(horizontal = 12.dp, vertical = 8.dp),
                     horizontalArrangement = Arrangement.SpaceBetween
                 ) {
@@ -709,42 +709,42 @@ fun OriginalCreditCard(
                         Text(
                             text = "Original Credit",
                             style = MaterialTheme.typography.labelSmall,
-                            color = TextTertiary,
+                            color = colors.textTertiary,
                             fontSize = 10.sp
                         )
                         Text(
                             text = obligation.originalAmount.formatRupees(),
                             style = MaterialTheme.typography.bodyMedium,
                             fontWeight = FontWeight.SemiBold,
-                            color = TextSecondary
+                            color = colors.textSecondary
                         )
                     }
                     Column(horizontalAlignment = Alignment.CenterHorizontally) {
                         Text(
                             text = "Outstanding Due",
                             style = MaterialTheme.typography.labelSmall,
-                            color = TextTertiary,
+                            color = colors.textTertiary,
                             fontSize = 10.sp
                         )
                         Text(
                             text = obligation.remainingAmount.formatRupees(),
                             style = MaterialTheme.typography.bodyMedium,
                             fontWeight = FontWeight.ExtraBold,
-                            color = OpenRed
+                            color = colors.openRed
                         )
                     }
                     Column(horizontalAlignment = Alignment.End) {
                         Text(
                             text = "Recorded On",
                             style = MaterialTheme.typography.labelSmall,
-                            color = TextTertiary,
+                            color = colors.textTertiary,
                             fontSize = 10.sp
                         )
                         Text(
                             text = obligation.createdAt.formatDateTime(),
                             style = MaterialTheme.typography.bodySmall,
                             fontWeight = FontWeight.Medium,
-                            color = TextSecondary
+                            color = colors.textSecondary
                         )
                     }
                 }
@@ -754,7 +754,7 @@ fun OriginalCreditCard(
                     Text(
                         text = "Note: ${obligation.notes}",
                         style = MaterialTheme.typography.bodySmall,
-                        color = TextTertiary
+                        color = colors.textTertiary
                     )
                 }
             } else {
@@ -768,16 +768,16 @@ fun OriginalCreditCard(
                     Text(
                         text = "No open obligation currently linked.",
                         style = MaterialTheme.typography.bodyMedium,
-                        color = TextSecondary
+                        color = colors.textSecondary
                     )
                     Spacer(modifier = Modifier.height(8.dp))
                     OutlinedButton(
                         onClick = onSelectObligation,
                         shape = RoundedCornerShape(14.dp),
-                        colors = ButtonDefaults.outlinedButtonColors(contentColor = TextPrimary),
-                        border = androidx.compose.foundation.BorderStroke(1.dp, BorderMediumDark)
+                        colors = ButtonDefaults.outlinedButtonColors(contentColor = colors.textPrimary),
+                        border = androidx.compose.foundation.BorderStroke(1.dp, colors.borderMedium)
                     ) {
-                        Icon(imageVector = Icons.Default.Search, contentDescription = null, tint = IQOOLime)
+                        Icon(imageVector = Icons.Default.Search, contentDescription = null, tint = colors.limePrimary)
                         Spacer(modifier = Modifier.width(6.dp))
                         Text("Select Open Obligation")
                     }
@@ -794,12 +794,14 @@ fun MatchExplanationCard(
     isRejected: Boolean,
     modifier: Modifier = Modifier
 ) {
+    val colors = PakkaTheme.colors
+
     Card(
         shape = RoundedCornerShape(22.dp),
         colors = CardDefaults.cardColors(
-            containerColor = SurfaceCardElevated
+            containerColor = colors.surfaceCardElevated
         ),
-        border = androidx.compose.foundation.BorderStroke(1.dp, BorderSubtleDark),
+        border = androidx.compose.foundation.BorderStroke(1.dp, colors.borderSubtle),
         modifier = modifier
             .fillMaxWidth()
             .testTag("match_explanation_card")
@@ -815,15 +817,15 @@ fun MatchExplanationCard(
                     text = "MATCH EXPLANATION",
                     style = MaterialTheme.typography.labelSmall,
                     fontWeight = FontWeight.ExtraBold,
-                    color = TextSecondary,
+                    color = colors.textSecondary,
                     letterSpacing = 1.sp
                 )
 
                 val (badgeBg, badgeFg, label) = when {
-                    isRejected -> Triple(SurfaceHigherDark, TextTertiary, "MATCH REJECTED")
-                    decision == MatchDecision.AUTO_MATCH -> Triple(SettledGreenContainer, SettledGreen, "AUTO MATCH")
-                    decision == MatchDecision.SUGGESTED_MATCH -> Triple(PartialAmberContainer, PartialAmber, "SUGGESTED MATCH")
-                    else -> Triple(SurfaceHigherDark, TextTertiary, "NO MATCH FOUND")
+                    isRejected -> Triple(colors.surfaceHigher, colors.textTertiary, "MATCH REJECTED")
+                    decision == MatchDecision.AUTO_MATCH -> Triple(colors.settledGreenContainer, colors.settledGreenText, "AUTO MATCH")
+                    decision == MatchDecision.SUGGESTED_MATCH -> Triple(colors.partialAmberContainer, colors.partialAmberText, "SUGGESTED MATCH")
+                    else -> Triple(colors.surfaceHigher, colors.textTertiary, "NO MATCH FOUND")
                 }
 
                 Surface(
@@ -855,17 +857,64 @@ fun MatchExplanationCard(
                         text = "Confidence Level",
                         style = MaterialTheme.typography.bodyMedium,
                         fontWeight = FontWeight.Medium,
-                        color = TextSecondary
+                        color = colors.textSecondary
                     )
                     Text(
                         text = "$confidencePct%",
                         style = MaterialTheme.typography.titleMedium,
                         fontWeight = FontWeight.ExtraBold,
-                        color = if (confidencePct >= 80) IQOOLime else PartialAmber
+                        color = if (confidencePct >= 80) colors.limePrimary else colors.partialAmber
                     )
                 }
 
                 Spacer(modifier = Modifier.height(8.dp))
+
+                // On-Device AI Explanation
+                val explanation = remember(candidate) {
+                    com.example.domain.reconciliation.OnDeviceReconciliationExplainer.explain(candidate)
+                }
+                Surface(
+                    shape = RoundedCornerShape(12.dp),
+                    color = colors.surface,
+                    border = androidx.compose.foundation.BorderStroke(1.dp, colors.borderSubtle),
+                    modifier = Modifier.fillMaxWidth().testTag("on_device_ai_explanation")
+                ) {
+                    Column(modifier = Modifier.padding(12.dp)) {
+                        Row(
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.spacedBy(6.dp)
+                        ) {
+                            Surface(
+                                shape = RoundedCornerShape(4.dp),
+                                color = colors.limeContainer
+                            ) {
+                                Text(
+                                    text = "ON-DEVICE AI EXPLANATION",
+                                    style = MaterialTheme.typography.labelSmall,
+                                    fontWeight = FontWeight.ExtraBold,
+                                    color = if (colors.isDark) colors.limePrimary else colors.onLimeContainer,
+                                    fontSize = 9.sp,
+                                    modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp)
+                                )
+                            }
+                            Text(
+                                text = "100% Local",
+                                style = MaterialTheme.typography.labelSmall,
+                                color = colors.textTertiary,
+                                fontSize = 10.sp
+                            )
+                        }
+                        Spacer(modifier = Modifier.height(6.dp))
+                        Text(
+                            text = explanation.naturalExplanation,
+                            style = MaterialTheme.typography.bodySmall,
+                            color = colors.textPrimary,
+                            lineHeight = 18.sp
+                        )
+                    }
+                }
+
+                Spacer(modifier = Modifier.height(12.dp))
 
                 // Reasons bullet points
                 Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
@@ -874,7 +923,7 @@ fun MatchExplanationCard(
                             Icon(
                                 imageVector = Icons.Default.CheckCircle,
                                 contentDescription = null,
-                                tint = SettledGreen,
+                                tint = colors.settledGreen,
                                 modifier = Modifier
                                     .size(16.dp)
                                     .padding(top = 2.dp)
@@ -883,7 +932,7 @@ fun MatchExplanationCard(
                             Text(
                                 text = reason,
                                 style = MaterialTheme.typography.bodySmall,
-                                color = TextPrimary
+                                color = colors.textPrimary
                             )
                         }
                     }
@@ -894,8 +943,8 @@ fun MatchExplanationCard(
                 // Proposed Settlement math breakdown
                 Surface(
                     shape = RoundedCornerShape(14.dp),
-                    color = SurfaceDark,
-                    border = androidx.compose.foundation.BorderStroke(1.dp, BorderSubtleDark),
+                    color = colors.surface,
+                    border = androidx.compose.foundation.BorderStroke(1.dp, colors.borderSubtle),
                     modifier = Modifier.fillMaxWidth()
                 ) {
                     Column(modifier = Modifier.padding(14.dp)) {
@@ -903,7 +952,7 @@ fun MatchExplanationCard(
                             text = "SETTLEMENT IMPACT",
                             style = MaterialTheme.typography.labelSmall,
                             fontWeight = FontWeight.Bold,
-                            color = TextSecondary,
+                            color = colors.textSecondary,
                             letterSpacing = 1.sp
                         )
                         Spacer(modifier = Modifier.height(8.dp))
@@ -911,12 +960,12 @@ fun MatchExplanationCard(
                             modifier = Modifier.fillMaxWidth(),
                             horizontalArrangement = Arrangement.SpaceBetween
                         ) {
-                            Text("Settled Amount", style = MaterialTheme.typography.bodySmall, color = TextSecondary)
+                            Text("Settled Amount", style = MaterialTheme.typography.bodySmall, color = colors.textSecondary)
                             Text(
                                 candidate.settlementPlan.settledAmount.formatRupees(),
                                 style = MaterialTheme.typography.bodySmall,
                                 fontWeight = FontWeight.Bold,
-                                color = SettledGreen
+                                color = colors.settledGreen
                             )
                         }
                         Spacer(modifier = Modifier.height(4.dp))
@@ -924,12 +973,12 @@ fun MatchExplanationCard(
                             modifier = Modifier.fillMaxWidth(),
                             horizontalArrangement = Arrangement.SpaceBetween
                         ) {
-                            Text("Remaining Due After Payment", style = MaterialTheme.typography.bodySmall, color = TextSecondary)
+                            Text("Remaining Due After Payment", style = MaterialTheme.typography.bodySmall, color = colors.textSecondary)
                             Text(
                                 candidate.settlementPlan.newRemainingAmount.formatRupees(),
                                 style = MaterialTheme.typography.bodySmall,
                                 fontWeight = FontWeight.Bold,
-                                color = if (candidate.settlementPlan.newRemainingAmount.isPositive) OpenRed else SettledGreen
+                                color = if (candidate.settlementPlan.newRemainingAmount.isPositive) colors.openRed else colors.settledGreen
                             )
                         }
                         if (candidate.settlementPlan.outcome == SettlementOutcome.OVERPAID) {
@@ -938,12 +987,12 @@ fun MatchExplanationCard(
                                 modifier = Modifier.fillMaxWidth(),
                                 horizontalArrangement = Arrangement.SpaceBetween
                             ) {
-                                Text("Overpaid / Excess Credit", style = MaterialTheme.typography.bodySmall, color = TextSecondary)
+                                Text("Overpaid / Excess Credit", style = MaterialTheme.typography.bodySmall, color = colors.textSecondary)
                                 Text(
                                     candidate.settlementPlan.excessAmount.formatRupees(),
                                     style = MaterialTheme.typography.bodySmall,
                                     fontWeight = FontWeight.Bold,
-                                    color = OverpaidBlue
+                                    color = colors.overpaidBlue
                                 )
                             }
                         }
@@ -955,7 +1004,7 @@ fun MatchExplanationCard(
                     Icon(
                         imageVector = Icons.Default.Info,
                         contentDescription = null,
-                        tint = TextTertiary,
+                        tint = colors.textTertiary,
                         modifier = Modifier.size(18.dp)
                     )
                     Spacer(modifier = Modifier.width(8.dp))
@@ -966,7 +1015,7 @@ fun MatchExplanationCard(
                             "No open debt matched the payer or amount with high confidence. You can manually assign this payment to an open customer obligation."
                         },
                         style = MaterialTheme.typography.bodySmall,
-                        color = TextSecondary
+                        color = colors.textSecondary
                     )
                 }
             }
@@ -986,6 +1035,8 @@ fun ActionButtonsSection(
     onManualSelect: () -> Unit,
     modifier: Modifier = Modifier
 ) {
+    val colors = PakkaTheme.colors
+
     Column(
         modifier = modifier.fillMaxWidth(),
         verticalArrangement = Arrangement.spacedBy(10.dp)
@@ -996,8 +1047,8 @@ fun ActionButtonsSection(
                 onClick = onConfirm,
                 enabled = !isSettling && !isDuplicate,
                 colors = ButtonDefaults.buttonColors(
-                    containerColor = IQOOLime,
-                    contentColor = IQOOOnLime
+                    containerColor = colors.limePrimary,
+                    contentColor = colors.onLimePrimary
                 ),
                 shape = RoundedCornerShape(16.dp),
                 modifier = Modifier
@@ -1007,7 +1058,7 @@ fun ActionButtonsSection(
             ) {
                 if (isSettling) {
                     CircularProgressIndicator(
-                        color = IQOOOnLime,
+                        color = colors.onLimePrimary,
                         modifier = Modifier.size(24.dp),
                         strokeWidth = 2.dp
                     )
@@ -1031,14 +1082,14 @@ fun ActionButtonsSection(
                 onClick = onChooseDifferent,
                 enabled = !isSettling,
                 shape = RoundedCornerShape(16.dp),
-                colors = ButtonDefaults.outlinedButtonColors(contentColor = TextPrimary),
-                border = androidx.compose.foundation.BorderStroke(1.dp, BorderMediumDark),
+                colors = ButtonDefaults.outlinedButtonColors(contentColor = colors.textPrimary),
+                border = androidx.compose.foundation.BorderStroke(1.dp, colors.borderMedium),
                 modifier = Modifier
                     .fillMaxWidth()
                     .height(48.dp)
                     .testTag("choose_different_obligation_button")
             ) {
-                Icon(imageVector = Icons.Default.SwapHoriz, contentDescription = null, tint = IQOOLime)
+                Icon(imageVector = Icons.Default.SwapHoriz, contentDescription = null, tint = colors.limePrimary)
                 Spacer(modifier = Modifier.width(8.dp))
                 Text("Choose Different Obligation", fontWeight = FontWeight.SemiBold)
             }
@@ -1054,7 +1105,7 @@ fun ActionButtonsSection(
             ) {
                 Text(
                     text = "Reject Match",
-                    color = OpenRed,
+                    color = colors.openRed,
                     style = MaterialTheme.typography.bodyMedium,
                     fontWeight = FontWeight.Medium
                 )
@@ -1065,8 +1116,8 @@ fun ActionButtonsSection(
                 onClick = onManualSelect,
                 enabled = !isSettling && !isDuplicate,
                 colors = ButtonDefaults.buttonColors(
-                    containerColor = IQOOLime,
-                    contentColor = IQOOOnLime
+                    containerColor = colors.limePrimary,
+                    contentColor = colors.onLimePrimary
                 ),
                 shape = RoundedCornerShape(16.dp),
                 modifier = Modifier
@@ -1095,6 +1146,8 @@ fun ManualReassignmentSheet(
     onClose: () -> Unit,
     modifier: Modifier = Modifier
 ) {
+    val colors = PakkaTheme.colors
+
     val filtered = remember(obligations, searchQuery) {
         if (searchQuery.isBlank()) obligations
         else {
@@ -1122,16 +1175,16 @@ fun ManualReassignmentSheet(
                     text = "Select Open Obligation",
                     style = MaterialTheme.typography.titleMedium,
                     fontWeight = FontWeight.Bold,
-                    color = TextPrimary
+                    color = colors.textPrimary
                 )
                 Text(
                     text = "Choose debt to allocate this payment to",
                     style = MaterialTheme.typography.labelSmall,
-                    color = TextSecondary
+                    color = colors.textSecondary
                 )
             }
             IconButton(onClick = onClose) {
-                Icon(imageVector = Icons.Default.Close, contentDescription = "Close", tint = TextPrimary)
+                Icon(imageVector = Icons.Default.Close, contentDescription = "Close", tint = colors.textPrimary)
             }
         }
 
@@ -1140,16 +1193,16 @@ fun ManualReassignmentSheet(
         OutlinedTextField(
             value = searchQuery,
             onValueChange = onSearchChange,
-            placeholder = { Text("Search customer name or amount...", color = TextTertiary) },
-            leadingIcon = { Icon(imageVector = Icons.Default.Search, contentDescription = null, tint = IQOOLime) },
+            placeholder = { Text("Search customer name or amount...", color = colors.textTertiary) },
+            leadingIcon = { Icon(imageVector = Icons.Default.Search, contentDescription = null, tint = colors.limePrimary) },
             singleLine = true,
             shape = RoundedCornerShape(14.dp),
             colors = OutlinedTextFieldDefaults.colors(
-                focusedBorderColor = IQOOLime,
-                unfocusedBorderColor = BorderMediumDark,
-                focusedTextColor = TextPrimary,
-                unfocusedTextColor = TextPrimary,
-                cursorColor = IQOOLime
+                focusedBorderColor = colors.limePrimary,
+                unfocusedBorderColor = colors.borderMedium,
+                focusedTextColor = colors.textPrimary,
+                unfocusedTextColor = colors.textPrimary,
+                cursorColor = colors.limePrimary
             ),
             modifier = Modifier.fillMaxWidth()
         )
@@ -1167,7 +1220,7 @@ fun ManualReassignmentSheet(
                     text = if (searchQuery.isBlank()) "No open obligations found in ledger."
                     else "No obligations matching \"$searchQuery\"",
                     style = MaterialTheme.typography.bodyMedium,
-                    color = TextSecondary
+                    color = colors.textSecondary
                 )
             }
         } else {
@@ -1180,9 +1233,9 @@ fun ManualReassignmentSheet(
                     Card(
                         shape = RoundedCornerShape(16.dp),
                         colors = CardDefaults.cardColors(
-                            containerColor = SurfaceDark
+                            containerColor = colors.surface
                         ),
-                        border = androidx.compose.foundation.BorderStroke(1.dp, BorderSubtleDark),
+                        border = androidx.compose.foundation.BorderStroke(1.dp, colors.borderSubtle),
                         modifier = Modifier
                             .fillMaxWidth()
                             .clickable { onSelect(item) }
@@ -1200,19 +1253,19 @@ fun ManualReassignmentSheet(
                                     text = item.customer.name,
                                     style = MaterialTheme.typography.titleSmall,
                                     fontWeight = FontWeight.Bold,
-                                    color = TextPrimary
+                                    color = colors.textPrimary
                                 )
                                 Spacer(modifier = Modifier.height(2.dp))
                                 Text(
                                     text = "Created: ${item.obligation.createdAt.formatDateTime()}",
                                     style = MaterialTheme.typography.labelSmall,
-                                    color = TextTertiary
+                                    color = colors.textTertiary
                                 )
                                 if (!item.obligation.notes.isNullOrBlank()) {
                                     Text(
                                         text = item.obligation.notes,
                                         style = MaterialTheme.typography.labelSmall,
-                                        color = TextSecondary
+                                        color = colors.textSecondary
                                     )
                                 }
                             }
@@ -1222,12 +1275,12 @@ fun ManualReassignmentSheet(
                                     text = item.obligation.remainingAmount.formatRupees(),
                                     style = MaterialTheme.typography.titleMedium,
                                     fontWeight = FontWeight.ExtraBold,
-                                    color = OpenRed
+                                    color = colors.openRed
                                 )
                                 Text(
                                     text = "Original: ${item.obligation.originalAmount.formatRupees()}",
                                     style = MaterialTheme.typography.labelSmall,
-                                    color = TextTertiary
+                                    color = colors.textTertiary
                                 )
                             }
                         }
