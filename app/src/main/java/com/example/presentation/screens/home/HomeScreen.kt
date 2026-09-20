@@ -34,7 +34,9 @@ import androidx.compose.material.icons.automirrored.filled.ArrowForward
 import androidx.compose.material.icons.automirrored.filled.ReceiptLong
 import androidx.compose.material.icons.filled.CheckCircle
 import androidx.compose.material.icons.filled.DoneAll
+import androidx.compose.material.icons.filled.Laptop
 import androidx.compose.material.icons.filled.Mic
+import androidx.compose.material.icons.filled.Palette
 import androidx.compose.material.icons.filled.People
 import androidx.compose.material.icons.filled.PhotoCamera
 import androidx.compose.material.icons.filled.Shield
@@ -49,6 +51,7 @@ import androidx.compose.material3.ExtendedFloatingActionButton
 import androidx.compose.material3.FilterChip
 import androidx.compose.material3.FilterChipDefaults
 import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
@@ -56,8 +59,11 @@ import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.ripple
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -76,29 +82,11 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.domain.model.ObligationStatus
 import com.example.domain.model.PaymentEvidence
+import com.example.domain.theme.AppThemeMode
+import com.example.domain.theme.ThemePreferences
+import com.example.presentation.screens.settings.AppearanceSettingsSheet
 import com.example.presentation.util.DateTimeFormatter
-import com.example.ui.theme.BackgroundDark
-import com.example.ui.theme.BorderAccentDark
-import com.example.ui.theme.BorderMediumDark
-import com.example.ui.theme.BorderSubtleDark
-import com.example.ui.theme.IQOOLime
-import com.example.ui.theme.IQOOLimeContainer
-import com.example.ui.theme.IQOOOnLime
-import com.example.ui.theme.OpenRed
-import com.example.ui.theme.OpenRedContainer
-import com.example.ui.theme.OverpaidBlue
-import com.example.ui.theme.PartialAmber
-import com.example.ui.theme.PartialAmberContainer
-import com.example.ui.theme.SettledGreen
-import com.example.ui.theme.SettledGreenContainer
-import com.example.ui.theme.SurfaceCard
-import com.example.ui.theme.SurfaceCardElevated
-import com.example.ui.theme.SurfaceDark
-import com.example.ui.theme.SurfaceElevatedDark
-import com.example.ui.theme.SurfaceHigherDark
-import com.example.ui.theme.TextPrimary
-import com.example.ui.theme.TextSecondary
-import com.example.ui.theme.TextTertiary
+import com.example.ui.theme.PakkaTheme
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -111,6 +99,13 @@ fun HomeScreen(
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
     val context = LocalContext.current
+    val colors = PakkaTheme.colors
+
+    var showOfficeBridgeSheet by remember { mutableStateOf(false) }
+    var showAppearanceSheet by remember { mutableStateOf(false) }
+
+    val themePreferences = remember { ThemePreferences.getInstance(context) }
+    val currentThemeMode by themePreferences.themeMode.collectAsState()
 
     val micPermissionLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.RequestPermission()
@@ -141,7 +136,7 @@ fun HomeScreen(
         modifier = modifier
             .fillMaxSize()
             .testTag("home_screen"),
-        containerColor = BackgroundDark,
+        containerColor = colors.background,
         floatingActionButton = {
             if (hasLedgerData) {
                 ExtendedFloatingActionButton(
@@ -150,7 +145,7 @@ fun HomeScreen(
                         Icon(
                             imageVector = Icons.Default.Mic,
                             contentDescription = "Voice Credit Mic",
-                            tint = IQOOOnLime,
+                            tint = colors.onLimePrimary,
                             modifier = Modifier.size(20.dp)
                         )
                     },
@@ -159,12 +154,12 @@ fun HomeScreen(
                             text = "Give Credit",
                             fontWeight = FontWeight.Bold,
                             fontSize = 14.sp,
-                            color = IQOOOnLime,
+                            color = colors.onLimePrimary,
                             letterSpacing = 0.2.sp
                         )
                     },
-                    containerColor = IQOOLime,
-                    contentColor = IQOOOnLime,
+                    containerColor = colors.limePrimary,
+                    contentColor = colors.onLimePrimary,
                     shape = RoundedCornerShape(18.dp),
                     elevation = androidx.compose.material3.FloatingActionButtonDefaults.elevation(
                         defaultElevation = 6.dp,
@@ -186,9 +181,13 @@ fun HomeScreen(
             contentPadding = PaddingValues(start = 16.dp, end = 16.dp, top = 8.dp, bottom = bottomPadding),
             verticalArrangement = Arrangement.spacedBy(16.dp)
         ) {
-            // 1. Compact Native iQOO Header
+            // 1. Compact Native Header with Theme Toggle & On-Device AI Pill
             item {
-                IQOONativeHeader()
+                IQOONativeHeader(
+                    currentThemeMode = currentThemeMode,
+                    onOpenThemeSettings = { showAppearanceSheet = true },
+                    onOpenOfficeBridge = { showOfficeBridgeSheet = true }
+                )
             }
 
             // 2. Hero Financial Snapshot (Elevated Balance Card)
@@ -239,14 +238,14 @@ fun HomeScreen(
                             text = "Customer Ledger",
                             style = MaterialTheme.typography.titleMedium,
                             fontWeight = FontWeight.Bold,
-                            color = TextPrimary,
+                            color = colors.textPrimary,
                             letterSpacing = 0.2.sp
                         )
                         if (hasLedgerData) {
                             Text(
                                 text = "${uiState.recentLedgerItems.size} accounts",
                                 style = MaterialTheme.typography.labelMedium,
-                                color = TextSecondary
+                                color = colors.textSecondary
                             )
                         }
                     }
@@ -266,14 +265,14 @@ fun HomeScreen(
                                 selected = uiState.activeFilter == LedgerFilter.ACTIVE_DUES,
                                 onClick = { viewModel.setLedgerFilter(LedgerFilter.ACTIVE_DUES) },
                                 label = "Active Dues (${uiState.customersWithOutstandingCount})",
-                                highlightColor = if (uiState.customersWithOutstandingCount > 0) OpenRed else null,
+                                highlightColor = if (uiState.customersWithOutstandingCount > 0) colors.openRed else null,
                                 modifier = Modifier.testTag("filter_chip_active_dues")
                             )
                             IQOORoundedFilterChip(
                                 selected = uiState.activeFilter == LedgerFilter.SETTLED,
                                 onClick = { viewModel.setLedgerFilter(LedgerFilter.SETTLED) },
                                 label = "Settled",
-                                highlightColor = SettledGreen,
+                                highlightColor = colors.settledGreen,
                                 modifier = Modifier.testTag("filter_chip_settled")
                             )
                         }
@@ -308,6 +307,13 @@ fun HomeScreen(
                     )
                 }
             }
+
+            // 9. Office Bridge & Innovation Showcase Card
+            item {
+                IQOOOfficeBridgeCard(
+                    onClick = { showOfficeBridgeSheet = true }
+                )
+            }
         }
     }
 
@@ -323,13 +329,47 @@ fun HomeScreen(
         onAmountChange = viewModel::updateAmount,
         onNoteChange = viewModel::updateNote
     )
+
+    // Office Bridge & Rubric Showcase Sheet
+    if (showOfficeBridgeSheet) {
+        OfficeBridgeBottomSheet(
+            uiState = uiState,
+            onDismiss = { showOfficeBridgeSheet = false },
+            onExportReport = { ctx -> viewModel.exportLedgerReport(ctx) },
+            onLoadDemo = { viewModel.loadDemoScenario() },
+            onResetLedger = { viewModel.resetLedgerForDemo() },
+            onImportEvidenceImage = {
+                showOfficeBridgeSheet = false
+                onNavigateToPaymentCapture()
+            }
+        )
+    }
+
+    // Appearance Settings Bottom Sheet
+    if (showAppearanceSheet) {
+        AppearanceSettingsSheet(
+            currentThemeMode = currentThemeMode,
+            onThemeSelected = { newMode ->
+                themePreferences.setThemeMode(newMode)
+                showAppearanceSheet = false
+            },
+            onDismiss = { showAppearanceSheet = false }
+        )
+    }
 }
 
 /**
- * Compact, dark system header inspired by iQOO/OriginOS system utilities.
+ * Compact system header inspired by iQOO/OriginOS system utilities.
+ * Includes Theme Mode button and Offline AI Pill.
  */
 @Composable
-private fun IQOONativeHeader() {
+private fun IQOONativeHeader(
+    currentThemeMode: AppThemeMode,
+    onOpenThemeSettings: () -> Unit,
+    onOpenOfficeBridge: () -> Unit
+) {
+    val colors = PakkaTheme.colors
+
     Row(
         modifier = Modifier
             .fillMaxWidth()
@@ -343,49 +383,164 @@ private fun IQOONativeHeader() {
                     text = "PakkaKhata",
                     style = MaterialTheme.typography.titleLarge,
                     fontWeight = FontWeight.ExtraBold,
-                    color = TextPrimary,
+                    color = colors.textPrimary,
                     letterSpacing = (-0.5).sp
                 )
                 Box(
                     modifier = Modifier
                         .size(6.dp)
                         .clip(CircleShape)
-                        .background(IQOOLime)
+                        .background(colors.limePrimary)
                 )
             }
             Text(
                 text = "The Ledger That Settles Itself",
                 style = MaterialTheme.typography.labelSmall,
-                color = TextSecondary,
+                color = colors.textSecondary,
                 letterSpacing = 0.2.sp
             )
         }
 
-        // On-device AI & Security Pill
-        Surface(
-            shape = RoundedCornerShape(14.dp),
-            color = SurfaceElevatedDark,
-            border = androidx.compose.foundation.BorderStroke(1.dp, BorderSubtleDark)
+        Row(
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.spacedBy(8.dp)
+        ) {
+            // Appearance & Theme Selector Icon Button
+            Surface(
+                shape = RoundedCornerShape(12.dp),
+                color = colors.surfaceElevated,
+                border = androidx.compose.foundation.BorderStroke(1.dp, colors.borderSubtle),
+                modifier = Modifier
+                    .clip(RoundedCornerShape(12.dp))
+                    .clickable { onOpenThemeSettings() }
+                    .testTag("btn_appearance_settings")
+            ) {
+                Box(
+                    modifier = Modifier.padding(horizontal = 8.dp, vertical = 6.dp),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Icon(
+                        imageVector = Icons.Default.Palette,
+                        contentDescription = "Theme Settings",
+                        tint = colors.limePrimary,
+                        modifier = Modifier.size(16.dp)
+                    )
+                }
+            }
+
+            // On-device AI & Security Pill
+            Surface(
+                shape = RoundedCornerShape(14.dp),
+                color = colors.surfaceElevated,
+                border = androidx.compose.foundation.BorderStroke(1.dp, colors.borderSubtle),
+                modifier = Modifier
+                    .clip(RoundedCornerShape(14.dp))
+                    .clickable { onOpenOfficeBridge() }
+                    .testTag("btn_offline_ai_pill")
+            ) {
+                Row(
+                    modifier = Modifier.padding(horizontal = 10.dp, vertical = 6.dp),
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(5.dp)
+                ) {
+                    Icon(
+                        imageVector = Icons.Default.Shield,
+                        contentDescription = null,
+                        tint = colors.limePrimary,
+                        modifier = Modifier.size(12.dp)
+                    )
+                    Text(
+                        text = "Offline AI",
+                        style = MaterialTheme.typography.labelSmall,
+                        fontWeight = FontWeight.SemiBold,
+                        color = colors.textPrimary,
+                        fontSize = 11.sp
+                    )
+                }
+            }
+        }
+    }
+}
+
+@Composable
+private fun IQOOOfficeBridgeCard(
+    onClick: () -> Unit,
+    modifier: Modifier = Modifier
+) {
+    val colors = PakkaTheme.colors
+
+    Card(
+        shape = RoundedCornerShape(18.dp),
+        colors = CardDefaults.cardColors(containerColor = colors.surfaceCardElevated),
+        border = androidx.compose.foundation.BorderStroke(1.dp, colors.borderSubtle),
+        modifier = modifier
+            .fillMaxWidth()
+            .clip(RoundedCornerShape(18.dp))
+            .clickable { onClick() }
+            .testTag("office_bridge_banner")
+    ) {
+        Row(
+            modifier = Modifier.padding(16.dp),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.SpaceBetween
         ) {
             Row(
-                modifier = Modifier.padding(horizontal = 10.dp, vertical = 5.dp),
                 verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.spacedBy(5.dp)
+                horizontalArrangement = Arrangement.spacedBy(12.dp)
             ) {
-                Icon(
-                    imageVector = Icons.Default.Shield,
-                    contentDescription = null,
-                    tint = IQOOLime,
-                    modifier = Modifier.size(12.dp)
-                )
-                Text(
-                    text = "Offline AI",
-                    style = MaterialTheme.typography.labelSmall,
-                    fontWeight = FontWeight.SemiBold,
-                    color = TextPrimary,
-                    fontSize = 11.sp
-                )
+                Surface(
+                    shape = RoundedCornerShape(12.dp),
+                    color = colors.limeContainer,
+                    modifier = Modifier.size(40.dp)
+                ) {
+                    Box(contentAlignment = Alignment.Center) {
+                        Icon(
+                            imageVector = Icons.Default.Laptop,
+                            contentDescription = null,
+                            tint = if (colors.isDark) colors.limePrimary else colors.onLimeContainer,
+                            modifier = Modifier.size(20.dp)
+                        )
+                    }
+                }
+                Column {
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.spacedBy(6.dp)
+                    ) {
+                        Text(
+                            text = "Office Bridge & Tools",
+                            style = MaterialTheme.typography.titleSmall,
+                            fontWeight = FontWeight.Bold,
+                            color = colors.textPrimary
+                        )
+                        Surface(
+                            shape = RoundedCornerShape(4.dp),
+                            color = colors.surface
+                        ) {
+                            Text(
+                                text = "OFFLINE AI",
+                                style = MaterialTheme.typography.labelSmall,
+                                fontWeight = FontWeight.ExtraBold,
+                                color = colors.limePrimary,
+                                fontSize = 9.sp,
+                                modifier = Modifier.padding(horizontal = 4.dp, vertical = 2.dp)
+                            )
+                        }
+                    }
+                    Text(
+                        text = "Shared clipboard, report export & 3-min demo",
+                        style = MaterialTheme.typography.bodySmall,
+                        color = colors.textSecondary,
+                        fontSize = 11.sp
+                    )
+                }
             }
+            Icon(
+                imageVector = Icons.AutoMirrored.Filled.ArrowForward,
+                contentDescription = null,
+                tint = colors.textSecondary,
+                modifier = Modifier.size(16.dp)
+            )
         }
     }
 }
@@ -396,6 +551,7 @@ private fun IQOONativeHeader() {
  */
 @Composable
 private fun IQOOHeroBalanceCard(uiState: HomeUiState) {
+    val colors = PakkaTheme.colors
     val isDue = uiState.totalOutstanding.isPositive
 
     Card(
@@ -403,15 +559,15 @@ private fun IQOOHeroBalanceCard(uiState: HomeUiState) {
             .fillMaxWidth()
             .testTag("ledger_metrics_card"),
         colors = CardDefaults.cardColors(
-            containerColor = SurfaceCardElevated
+            containerColor = colors.surfaceCardElevated
         ),
         shape = RoundedCornerShape(24.dp),
         border = androidx.compose.foundation.BorderStroke(
             width = 1.dp,
             brush = Brush.verticalGradient(
                 colors = listOf(
-                    if (isDue) BorderAccentDark else BorderMediumDark,
-                    BorderSubtleDark
+                    if (isDue) colors.borderAccent else colors.borderMedium,
+                    colors.borderSubtle
                 )
             )
         ),
@@ -430,18 +586,18 @@ private fun IQOOHeroBalanceCard(uiState: HomeUiState) {
                     text = "TOTAL OUTSTANDING",
                     style = MaterialTheme.typography.labelSmall,
                     fontWeight = FontWeight.Bold,
-                    color = TextSecondary,
+                    color = colors.textSecondary,
                     letterSpacing = 1.2.sp
                 )
                 Surface(
                     shape = RoundedCornerShape(8.dp),
-                    color = if (isDue) OpenRedContainer else SettledGreenContainer
+                    color = if (isDue) colors.openRedContainer else colors.settledGreenContainer
                 ) {
                     Text(
                         text = if (isDue) "${uiState.customersWithOutstandingCount} DUES PENDING" else "ALL CLEAR",
                         style = MaterialTheme.typography.labelSmall,
                         fontWeight = FontWeight.Bold,
-                        color = if (isDue) OpenRed else SettledGreen,
+                        color = if (isDue) colors.openRedText else colors.settledGreenText,
                         modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp),
                         fontSize = 11.sp
                     )
@@ -454,7 +610,7 @@ private fun IQOOHeroBalanceCard(uiState: HomeUiState) {
                     text = uiState.totalOutstanding.formatRupees(),
                     style = MaterialTheme.typography.headlineLarge,
                     fontWeight = FontWeight.ExtraBold,
-                    color = if (isDue) TextPrimary else SettledGreen,
+                    color = if (isDue) colors.textPrimary else colors.settledGreen,
                     letterSpacing = (-1).sp,
                     fontSize = 36.sp
                 )
@@ -466,7 +622,7 @@ private fun IQOOHeroBalanceCard(uiState: HomeUiState) {
                         "All customer accounts settled • Ledger balanced"
                     },
                     style = MaterialTheme.typography.bodySmall,
-                    color = TextSecondary
+                    color = colors.textSecondary
                 )
             }
 
@@ -486,8 +642,8 @@ private fun IQOOHeroBalanceCard(uiState: HomeUiState) {
                         .fillMaxWidth()
                         .height(6.dp)
                         .clip(RoundedCornerShape(3.dp)),
-                    color = SettledGreen,
-                    trackColor = SurfaceDark,
+                    color = colors.settledGreen,
+                    trackColor = colors.surface,
                     strokeCap = StrokeCap.Round
                 )
                 Row(
@@ -497,13 +653,13 @@ private fun IQOOHeroBalanceCard(uiState: HomeUiState) {
                     Text(
                         text = "Settled ${uiState.totalSettledAmount.formatRupees()}",
                         style = MaterialTheme.typography.labelSmall,
-                        color = SettledGreen,
+                        color = colors.settledGreen,
                         fontWeight = FontWeight.SemiBold
                     )
                     Text(
                         text = "${(progressFraction * 100).toInt()}% recovered",
                         style = MaterialTheme.typography.labelSmall,
-                        color = TextTertiary
+                        color = colors.textTertiary
                     )
                 }
             }
@@ -516,6 +672,8 @@ private fun IQOOHeroBalanceCard(uiState: HomeUiState) {
  */
 @Composable
 private fun IQOOQuickStatsGrid(uiState: HomeUiState) {
+    val colors = PakkaTheme.colors
+
     Row(
         modifier = Modifier.fillMaxWidth(),
         horizontalArrangement = Arrangement.spacedBy(8.dp)
@@ -525,21 +683,21 @@ private fun IQOOQuickStatsGrid(uiState: HomeUiState) {
             icon = Icons.Default.People,
             value = "${uiState.customerCount}",
             label = "Customers",
-            tint = TextPrimary
+            tint = colors.textPrimary
         )
         IQOOStatTile(
             modifier = Modifier.weight(1f),
             icon = Icons.AutoMirrored.Filled.ReceiptLong,
             value = "${uiState.openObligationsCount}",
             label = "Active",
-            tint = if (uiState.openObligationsCount > 0) OpenRed else TextPrimary
+            tint = if (uiState.openObligationsCount > 0) colors.openRed else colors.textPrimary
         )
         IQOOStatTile(
             modifier = Modifier.weight(1f),
             icon = Icons.Default.DoneAll,
             value = "${uiState.unreconciledEvidences.size}",
             label = "Review",
-            tint = if (uiState.unreconciledEvidences.isNotEmpty()) PartialAmber else TextSecondary,
+            tint = if (uiState.unreconciledEvidences.isNotEmpty()) colors.partialAmber else colors.textSecondary,
             highlight = uiState.unreconciledEvidences.isNotEmpty()
         )
         IQOOStatTile(
@@ -547,7 +705,7 @@ private fun IQOOQuickStatsGrid(uiState: HomeUiState) {
             icon = Icons.Default.CheckCircle,
             value = "${uiState.recentlySettledCount}",
             label = "Settled",
-            tint = SettledGreen
+            tint = colors.settledGreen
         )
     }
 }
@@ -561,13 +719,15 @@ private fun IQOOStatTile(
     tint: Color,
     highlight: Boolean = false
 ) {
+    val colors = PakkaTheme.colors
+
     Surface(
         modifier = modifier,
         shape = RoundedCornerShape(16.dp),
-        color = SurfaceCard,
+        color = colors.surfaceCard,
         border = androidx.compose.foundation.BorderStroke(
             1.dp,
-            if (highlight) PartialAmber.copy(alpha = 0.5f) else BorderSubtleDark
+            if (highlight) colors.partialAmber.copy(alpha = 0.5f) else colors.borderSubtle
         )
     ) {
         Column(
@@ -592,7 +752,7 @@ private fun IQOOStatTile(
             Text(
                 text = label,
                 style = MaterialTheme.typography.labelSmall,
-                color = TextTertiary,
+                color = colors.textTertiary,
                 fontSize = 10.sp,
                 maxLines = 1,
                 overflow = TextOverflow.Ellipsis
@@ -611,6 +771,8 @@ private fun IQOOPrimaryActionsSection(
     onRecordPaymentClick: () -> Unit,
     onReviewPaymentsClick: () -> Unit
 ) {
+    val colors = PakkaTheme.colors
+
     Column(
         modifier = Modifier
             .fillMaxWidth()
@@ -625,8 +787,8 @@ private fun IQOOPrimaryActionsSection(
             Surface(
                 onClick = onGiveCreditClick,
                 shape = RoundedCornerShape(20.dp),
-                color = IQOOLimeContainer,
-                border = androidx.compose.foundation.BorderStroke(1.dp, BorderAccentDark),
+                color = colors.limeContainer,
+                border = androidx.compose.foundation.BorderStroke(1.dp, colors.borderAccent),
                 modifier = Modifier
                     .weight(1f)
                     .height(84.dp)
@@ -643,13 +805,13 @@ private fun IQOOPrimaryActionsSection(
                         modifier = Modifier
                             .size(44.dp)
                             .clip(CircleShape)
-                            .background(IQOOLime),
+                            .background(colors.limePrimary),
                         contentAlignment = Alignment.Center
                     ) {
                         Icon(
                             imageVector = Icons.Default.Mic,
                             contentDescription = null,
-                            tint = IQOOOnLime,
+                            tint = colors.onLimePrimary,
                             modifier = Modifier.size(22.dp)
                         )
                     }
@@ -658,24 +820,24 @@ private fun IQOOPrimaryActionsSection(
                             text = "Give Credit",
                             style = MaterialTheme.typography.titleSmall,
                             fontWeight = FontWeight.Bold,
-                            color = TextPrimary
+                            color = colors.textPrimary
                         )
                         Text(
                             text = "Say who took credit",
                             style = MaterialTheme.typography.labelSmall,
-                            color = TextSecondary,
+                            color = colors.textSecondary,
                             fontSize = 11.sp
                         )
                     }
                 }
             }
 
-            // Record Payment Card (Elevated Graphite Treatment)
+            // Record Payment Card (Elevated Treatment)
             Surface(
                 onClick = onRecordPaymentClick,
                 shape = RoundedCornerShape(20.dp),
-                color = SurfaceCardElevated,
-                border = androidx.compose.foundation.BorderStroke(1.dp, BorderMediumDark),
+                color = colors.surfaceCardElevated,
+                border = androidx.compose.foundation.BorderStroke(1.dp, colors.borderMedium),
                 modifier = Modifier
                     .weight(1f)
                     .height(84.dp)
@@ -692,13 +854,13 @@ private fun IQOOPrimaryActionsSection(
                         modifier = Modifier
                             .size(44.dp)
                             .clip(CircleShape)
-                            .background(SurfaceHigherDark),
+                            .background(colors.surfaceHigher),
                         contentAlignment = Alignment.Center
                     ) {
                         Icon(
                             imageVector = Icons.Default.PhotoCamera,
                             contentDescription = null,
-                            tint = PartialAmber,
+                            tint = colors.partialAmber,
                             modifier = Modifier.size(22.dp)
                         )
                     }
@@ -707,12 +869,12 @@ private fun IQOOPrimaryActionsSection(
                             text = "Record Pay",
                             style = MaterialTheme.typography.titleSmall,
                             fontWeight = FontWeight.Bold,
-                            color = TextPrimary
+                            color = colors.textPrimary
                         )
                         Text(
                             text = "Scan payment proof",
                             style = MaterialTheme.typography.labelSmall,
-                            color = TextSecondary,
+                            color = colors.textSecondary,
                             fontSize = 11.sp
                         )
                     }
@@ -725,8 +887,8 @@ private fun IQOOPrimaryActionsSection(
             Surface(
                 onClick = onReviewPaymentsClick,
                 shape = RoundedCornerShape(14.dp),
-                color = PartialAmberContainer,
-                border = androidx.compose.foundation.BorderStroke(1.dp, PartialAmber.copy(alpha = 0.4f)),
+                color = colors.partialAmberContainer,
+                border = androidx.compose.foundation.BorderStroke(1.dp, colors.partialAmber.copy(alpha = 0.4f)),
                 modifier = Modifier
                     .fillMaxWidth()
                     .testTag("review_payments_action_button")
@@ -746,13 +908,13 @@ private fun IQOOPrimaryActionsSection(
                             modifier = Modifier
                                 .size(8.dp)
                                 .clip(CircleShape)
-                                .background(PartialAmber)
+                                .background(colors.partialAmber)
                         )
                         Text(
                             text = "$pendingReviewCount payment(s) waiting for your confirmation",
                             style = MaterialTheme.typography.bodySmall,
                             fontWeight = FontWeight.SemiBold,
-                            color = PartialAmber
+                            color = colors.partialAmberText
                         )
                     }
                     Row(
@@ -763,12 +925,12 @@ private fun IQOOPrimaryActionsSection(
                             text = "Review",
                             style = MaterialTheme.typography.labelSmall,
                             fontWeight = FontWeight.Bold,
-                            color = PartialAmber
+                            color = colors.partialAmberText
                         )
                         Icon(
                             imageVector = Icons.AutoMirrored.Filled.ArrowForward,
                             contentDescription = null,
-                            tint = PartialAmber,
+                            tint = colors.partialAmberText,
                             modifier = Modifier.size(14.dp)
                         )
                     }
@@ -786,10 +948,12 @@ private fun IQOOPendingPaymentsSection(
     pendingEvidences: List<PaymentEvidence>,
     onReviewEvidence: (Long) -> Unit
 ) {
+    val colors = PakkaTheme.colors
+
     Card(
         shape = RoundedCornerShape(20.dp),
-        colors = CardDefaults.cardColors(containerColor = SurfaceCardElevated),
-        border = androidx.compose.foundation.BorderStroke(1.dp, PartialAmber.copy(alpha = 0.4f)),
+        colors = CardDefaults.cardColors(containerColor = colors.surfaceCardElevated),
+        border = androidx.compose.foundation.BorderStroke(1.dp, colors.partialAmber.copy(alpha = 0.4f)),
         modifier = Modifier
             .fillMaxWidth()
             .testTag("unreconciled_payments_banner")
@@ -805,25 +969,25 @@ private fun IQOOPendingPaymentsSection(
                         modifier = Modifier
                             .size(8.dp)
                             .clip(CircleShape)
-                            .background(PartialAmber)
+                            .background(colors.partialAmber)
                     )
                     Text(
                         text = "PAYMENT TO REVIEW",
                         style = MaterialTheme.typography.labelSmall,
                         fontWeight = FontWeight.Bold,
-                        color = PartialAmber,
+                        color = colors.partialAmber,
                         letterSpacing = 1.sp
                     )
                 }
                 Surface(
                     shape = RoundedCornerShape(8.dp),
-                    color = SurfaceHigherDark
+                    color = colors.surfaceHigher
                 ) {
                     Text(
                         text = "${pendingEvidences.size} PENDING",
                         style = MaterialTheme.typography.labelSmall,
                         fontWeight = FontWeight.Bold,
-                        color = TextSecondary,
+                        color = colors.textSecondary,
                         modifier = Modifier.padding(horizontal = 8.dp, vertical = 2.dp),
                         fontSize = 10.sp
                     )
@@ -836,8 +1000,8 @@ private fun IQOOPendingPaymentsSection(
 
                 Surface(
                     shape = RoundedCornerShape(14.dp),
-                    color = SurfaceDark,
-                    border = androidx.compose.foundation.BorderStroke(1.dp, BorderSubtleDark),
+                    color = colors.surface,
+                    border = androidx.compose.foundation.BorderStroke(1.dp, colors.borderSubtle),
                     modifier = Modifier.fillMaxWidth()
                 ) {
                     Row(
@@ -853,17 +1017,17 @@ private fun IQOOPendingPaymentsSection(
                                     text = evidence.extractedAmount.formatRupees(),
                                     style = MaterialTheme.typography.titleLarge,
                                     fontWeight = FontWeight.ExtraBold,
-                                    color = IQOOLime
+                                    color = colors.limePrimary
                                 )
                                 Surface(
                                     shape = RoundedCornerShape(6.dp),
-                                    color = SurfaceHigherDark
+                                    color = colors.surfaceHigher
                                 ) {
                                     Text(
                                         text = appName,
                                         style = MaterialTheme.typography.labelSmall,
                                         fontWeight = FontWeight.Bold,
-                                        color = TextSecondary,
+                                        color = colors.textSecondary,
                                         modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp),
                                         fontSize = 10.sp
                                     )
@@ -874,13 +1038,13 @@ private fun IQOOPendingPaymentsSection(
                                 text = "From: ${evidence.extractedSenderName ?: "Customer"}",
                                 style = MaterialTheme.typography.bodySmall,
                                 fontWeight = FontWeight.SemiBold,
-                                color = TextPrimary
+                                color = colors.textPrimary
                             )
                             if (!evidence.utrNumber.isNullOrBlank()) {
                                 Text(
                                     text = "UTR: ${evidence.utrNumber} • $timeFormatted",
                                     style = MaterialTheme.typography.labelSmall,
-                                    color = TextTertiary,
+                                    color = colors.textTertiary,
                                     fontSize = 11.sp
                                 )
                             }
@@ -889,8 +1053,8 @@ private fun IQOOPendingPaymentsSection(
                         Button(
                             onClick = { onReviewEvidence(evidence.id) },
                             colors = ButtonDefaults.buttonColors(
-                                containerColor = IQOOLime,
-                                contentColor = IQOOOnLime
+                                containerColor = colors.limePrimary,
+                                contentColor = colors.onLimePrimary
                             ),
                             shape = RoundedCornerShape(12.dp),
                             contentPadding = PaddingValues(horizontal = 14.dp, vertical = 8.dp),
@@ -906,7 +1070,7 @@ private fun IQOOPendingPaymentsSection(
 }
 
 /**
- * Filter Chip styled as a refined iQOO pill.
+ * Filter Chip styled as a refined pill.
  */
 @Composable
 private fun IQOORoundedFilterChip(
@@ -916,19 +1080,21 @@ private fun IQOORoundedFilterChip(
     highlightColor: Color? = null,
     modifier: Modifier = Modifier
 ) {
+    val colors = PakkaTheme.colors
+
     Surface(
         onClick = onClick,
         shape = RoundedCornerShape(16.dp),
         color = when {
-            selected -> SurfaceHigherDark
-            else -> SurfaceCard
+            selected -> colors.surfaceHigher
+            else -> colors.surfaceCard
         },
         border = androidx.compose.foundation.BorderStroke(
             1.dp,
             when {
                 selected && highlightColor != null -> highlightColor.copy(alpha = 0.6f)
-                selected -> BorderAccentDark
-                else -> BorderSubtleDark
+                selected -> colors.borderAccent
+                else -> colors.borderSubtle
             }
         ),
         modifier = modifier
@@ -943,7 +1109,7 @@ private fun IQOORoundedFilterChip(
                     modifier = Modifier
                         .size(6.dp)
                         .clip(CircleShape)
-                        .background(highlightColor ?: IQOOLime)
+                        .background(highlightColor ?: colors.limePrimary)
                 )
             }
             Text(
@@ -952,8 +1118,8 @@ private fun IQOORoundedFilterChip(
                 fontWeight = if (selected) FontWeight.Bold else FontWeight.Medium,
                 color = when {
                     selected && highlightColor != null -> highlightColor
-                    selected -> IQOOLime
-                    else -> TextSecondary
+                    selected -> colors.limePrimary
+                    else -> colors.textSecondary
                 }
             )
         }
@@ -968,6 +1134,7 @@ private fun IQOOLedgerObligationCard(
     item: LedgerItemUiModel,
     onClick: () -> Unit
 ) {
+    val colors = PakkaTheme.colors
     val receivedPaise = maxOf(0L, item.obligation.originalAmount.paise - item.obligation.remainingAmount.paise)
     val receivedMoney = com.example.domain.model.Money.fromPaise(receivedPaise)
     val formattedDate = DateTimeFormatter.formatRelativeTime(item.obligation.createdAt)
@@ -982,12 +1149,12 @@ private fun IQOOLedgerObligationCard(
             .testTag("obligation_item_${item.obligation.id}")
             .clickable(
                 interactionSource = remember { MutableInteractionSource() },
-                indication = ripple(color = IQOOLime.copy(alpha = 0.2f)),
+                indication = ripple(color = colors.limePrimary.copy(alpha = 0.2f)),
                 onClick = onClick
             ),
-        colors = CardDefaults.cardColors(containerColor = SurfaceCardElevated),
+        colors = CardDefaults.cardColors(containerColor = colors.surfaceCardElevated),
         shape = RoundedCornerShape(20.dp),
-        border = androidx.compose.foundation.BorderStroke(1.dp, BorderSubtleDark)
+        border = androidx.compose.foundation.BorderStroke(1.dp, colors.borderSubtle)
     ) {
         Column(
             modifier = Modifier
@@ -1010,14 +1177,14 @@ private fun IQOOLedgerObligationCard(
                         modifier = Modifier
                             .size(42.dp)
                             .clip(RoundedCornerShape(12.dp))
-                            .background(SurfaceHigherDark),
+                            .background(colors.surfaceHigher),
                         contentAlignment = Alignment.Center
                     ) {
                         Text(
                             text = item.customerName.take(1).uppercase(),
                             style = MaterialTheme.typography.titleMedium,
                             fontWeight = FontWeight.ExtraBold,
-                            color = IQOOLime
+                            color = colors.limePrimary
                         )
                     }
                     Column {
@@ -1025,12 +1192,12 @@ private fun IQOOLedgerObligationCard(
                             text = item.customerName,
                             style = MaterialTheme.typography.titleSmall,
                             fontWeight = FontWeight.Bold,
-                            color = TextPrimary
+                            color = colors.textPrimary
                         )
                         Text(
                             text = formattedDate,
                             style = MaterialTheme.typography.labelSmall,
-                            color = TextTertiary,
+                            color = colors.textTertiary,
                             fontSize = 11.sp
                         )
                     }
@@ -1040,10 +1207,10 @@ private fun IQOOLedgerObligationCard(
                 Surface(
                     shape = RoundedCornerShape(8.dp),
                     color = when (item.obligation.status) {
-                        ObligationStatus.OPEN -> OpenRedContainer
-                        ObligationStatus.PARTIALLY_SETTLED -> PartialAmberContainer
-                        ObligationStatus.FULLY_SETTLED -> SettledGreenContainer
-                        ObligationStatus.OVERPAID -> SurfaceHigherDark
+                        ObligationStatus.OPEN -> colors.openRedContainer
+                        ObligationStatus.PARTIALLY_SETTLED -> colors.partialAmberContainer
+                        ObligationStatus.FULLY_SETTLED -> colors.settledGreenContainer
+                        ObligationStatus.OVERPAID -> colors.surfaceHigher
                     }
                 ) {
                     Text(
@@ -1056,10 +1223,10 @@ private fun IQOOLedgerObligationCard(
                         style = MaterialTheme.typography.labelSmall,
                         fontWeight = FontWeight.Bold,
                         color = when (item.obligation.status) {
-                            ObligationStatus.OPEN -> OpenRed
-                            ObligationStatus.PARTIALLY_SETTLED -> PartialAmber
-                            ObligationStatus.FULLY_SETTLED -> SettledGreen
-                            ObligationStatus.OVERPAID -> OverpaidBlue
+                            ObligationStatus.OPEN -> colors.openRedText
+                            ObligationStatus.PARTIALLY_SETTLED -> colors.partialAmberText
+                            ObligationStatus.FULLY_SETTLED -> colors.settledGreenText
+                            ObligationStatus.OVERPAID -> colors.overpaidBlueText
                         },
                         modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp),
                         fontSize = 10.sp
@@ -1072,7 +1239,7 @@ private fun IQOOLedgerObligationCard(
                 Text(
                     text = item.obligation.notes,
                     style = MaterialTheme.typography.bodySmall,
-                    color = TextSecondary,
+                    color = colors.textSecondary,
                     maxLines = 1,
                     overflow = TextOverflow.Ellipsis
                 )
@@ -1080,7 +1247,7 @@ private fun IQOOLedgerObligationCard(
                 Text(
                     text = "\"${item.obligation.voiceTranscript}\"",
                     style = MaterialTheme.typography.labelSmall,
-                    color = TextTertiary,
+                    color = colors.textTertiary,
                     maxLines = 1,
                     overflow = TextOverflow.Ellipsis
                 )
@@ -1093,8 +1260,8 @@ private fun IQOOLedgerObligationCard(
                     .fillMaxWidth()
                     .height(4.dp)
                     .clip(RoundedCornerShape(2.dp)),
-                color = if (progressFraction >= 1f) SettledGreen else IQOOLime,
-                trackColor = SurfaceDark,
+                color = if (progressFraction >= 1f) colors.settledGreen else colors.limePrimary,
+                trackColor = colors.surface,
                 strokeCap = StrokeCap.Round
             )
 
@@ -1103,26 +1270,26 @@ private fun IQOOLedgerObligationCard(
                 modifier = Modifier
                     .fillMaxWidth()
                     .clip(RoundedCornerShape(12.dp))
-                    .background(SurfaceDark)
+                    .background(colors.surface)
                     .padding(horizontal = 12.dp, vertical = 8.dp),
                 horizontalArrangement = Arrangement.SpaceBetween,
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 Column {
-                    Text(text = "Original Credit", style = MaterialTheme.typography.labelSmall, color = TextTertiary, fontSize = 10.sp)
-                    Text(text = item.obligation.originalAmount.formatRupees(), style = MaterialTheme.typography.bodyMedium, fontWeight = FontWeight.SemiBold, color = TextSecondary)
+                    Text(text = "Original Credit", style = MaterialTheme.typography.labelSmall, color = colors.textTertiary, fontSize = 10.sp)
+                    Text(text = item.obligation.originalAmount.formatRupees(), style = MaterialTheme.typography.bodyMedium, fontWeight = FontWeight.SemiBold, color = colors.textSecondary)
                 }
                 Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                    Text(text = "Received", style = MaterialTheme.typography.labelSmall, color = TextTertiary, fontSize = 10.sp)
-                    Text(text = receivedMoney.formatRupees(), style = MaterialTheme.typography.bodyMedium, fontWeight = FontWeight.SemiBold, color = SettledGreen)
+                    Text(text = "Received", style = MaterialTheme.typography.labelSmall, color = colors.textTertiary, fontSize = 10.sp)
+                    Text(text = receivedMoney.formatRupees(), style = MaterialTheme.typography.bodyMedium, fontWeight = FontWeight.SemiBold, color = colors.settledGreen)
                 }
                 Column(horizontalAlignment = Alignment.End) {
-                    Text(text = "Outstanding", style = MaterialTheme.typography.labelSmall, color = TextTertiary, fontSize = 10.sp)
+                    Text(text = "Outstanding", style = MaterialTheme.typography.labelSmall, color = colors.textTertiary, fontSize = 10.sp)
                     Text(
                         text = item.obligation.remainingAmount.formatRupees(),
                         style = MaterialTheme.typography.bodyLarge,
                         fontWeight = FontWeight.ExtraBold,
-                        color = if (item.obligation.remainingAmount.isPositive) OpenRed else SettledGreen
+                        color = if (item.obligation.remainingAmount.isPositive) colors.openRed else colors.settledGreen
                     )
                 }
             }
@@ -1137,14 +1304,14 @@ private fun IQOOLedgerObligationCard(
                     text = "View History",
                     style = MaterialTheme.typography.labelSmall,
                     fontWeight = FontWeight.SemiBold,
-                    color = IQOOLime,
+                    color = colors.limePrimary,
                     fontSize = 11.sp
                 )
                 Spacer(modifier = Modifier.width(3.dp))
                 Icon(
                     imageVector = Icons.AutoMirrored.Filled.ArrowForward,
                     contentDescription = null,
-                    tint = IQOOLime,
+                    tint = colors.limePrimary,
                     modifier = Modifier.size(12.dp)
                 )
             }
@@ -1161,6 +1328,8 @@ private fun IQOOEmptyLedgerCard(
     showGiveFirstCredit: Boolean = true,
     onGiveCreditClick: () -> Unit
 ) {
+    val colors = PakkaTheme.colors
+
     val title = when (activeFilter) {
         LedgerFilter.ALL -> "Your ledger is ready"
         LedgerFilter.ACTIVE_DUES -> "All accounts settled"
@@ -1177,8 +1346,8 @@ private fun IQOOEmptyLedgerCard(
             .fillMaxWidth()
             .testTag("empty_ledger_card"),
         shape = RoundedCornerShape(20.dp),
-        colors = CardDefaults.cardColors(containerColor = SurfaceCard),
-        border = androidx.compose.foundation.BorderStroke(1.dp, BorderSubtleDark)
+        colors = CardDefaults.cardColors(containerColor = colors.surfaceCard),
+        border = androidx.compose.foundation.BorderStroke(1.dp, colors.borderSubtle)
     ) {
         Column(
             modifier = Modifier
@@ -1191,13 +1360,13 @@ private fun IQOOEmptyLedgerCard(
                 modifier = Modifier
                     .size(54.dp)
                     .clip(CircleShape)
-                    .background(SurfaceHigherDark),
+                    .background(colors.surfaceHigher),
                 contentAlignment = Alignment.Center
             ) {
                 Icon(
                     imageVector = if (activeFilter == LedgerFilter.ACTIVE_DUES) Icons.Default.DoneAll else Icons.Default.Mic,
                     contentDescription = null,
-                    tint = if (activeFilter == LedgerFilter.ACTIVE_DUES) SettledGreen else IQOOLime,
+                    tint = if (activeFilter == LedgerFilter.ACTIVE_DUES) colors.settledGreen else colors.limePrimary,
                     modifier = Modifier.size(24.dp)
                 )
             }
@@ -1206,12 +1375,12 @@ private fun IQOOEmptyLedgerCard(
                 text = title,
                 style = MaterialTheme.typography.titleMedium,
                 fontWeight = FontWeight.Bold,
-                color = TextPrimary
+                color = colors.textPrimary
             )
             Text(
                 text = description,
                 style = MaterialTheme.typography.bodySmall,
-                color = TextSecondary,
+                color = colors.textSecondary,
                 textAlign = androidx.compose.ui.text.style.TextAlign.Center
             )
 
@@ -1220,8 +1389,8 @@ private fun IQOOEmptyLedgerCard(
                 Button(
                     onClick = onGiveCreditClick,
                     colors = ButtonDefaults.buttonColors(
-                        containerColor = IQOOLime,
-                        contentColor = IQOOOnLime
+                        containerColor = colors.limePrimary,
+                        contentColor = colors.onLimePrimary
                     ),
                     shape = RoundedCornerShape(16.dp),
                     contentPadding = PaddingValues(horizontal = 24.dp, vertical = 12.dp),
@@ -1231,14 +1400,14 @@ private fun IQOOEmptyLedgerCard(
                         imageVector = Icons.Default.Mic,
                         contentDescription = "Give First Credit Mic",
                         modifier = Modifier.size(18.dp),
-                        tint = IQOOOnLime
+                        tint = colors.onLimePrimary
                     )
                     Spacer(modifier = Modifier.width(8.dp))
                     Text(
                         text = "Give First Credit",
                         fontWeight = FontWeight.Bold,
                         fontSize = 14.sp,
-                        color = IQOOOnLime
+                        color = colors.onLimePrimary
                     )
                 }
             }
@@ -1254,13 +1423,15 @@ private fun IQOORecentSettlementsSection(
     recentSettlements: List<RecentSettlementUiModel>,
     onCustomerClick: (Long) -> Unit
 ) {
+    val colors = PakkaTheme.colors
+
     Card(
         modifier = Modifier
             .fillMaxWidth()
             .testTag("recent_settlements_card"),
         shape = RoundedCornerShape(20.dp),
-        colors = CardDefaults.cardColors(containerColor = SurfaceCard),
-        border = androidx.compose.foundation.BorderStroke(1.dp, BorderSubtleDark)
+        colors = CardDefaults.cardColors(containerColor = colors.surfaceCard),
+        border = androidx.compose.foundation.BorderStroke(1.dp, colors.borderSubtle)
     ) {
         Column(
             modifier = Modifier.padding(16.dp),
@@ -1275,16 +1446,16 @@ private fun IQOORecentSettlementsSection(
                     text = "Recently Settled",
                     style = MaterialTheme.typography.titleSmall,
                     fontWeight = FontWeight.Bold,
-                    color = TextPrimary
+                    color = colors.textPrimary
                 )
                 Surface(
                     shape = RoundedCornerShape(6.dp),
-                    color = SettledGreenContainer
+                    color = colors.settledGreenContainer
                 ) {
                     Text(
                         text = "AUTO-RECONCILED",
                         style = MaterialTheme.typography.labelSmall,
-                        color = SettledGreen,
+                        color = colors.settledGreenText,
                         fontWeight = FontWeight.Bold,
                         modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp),
                         fontSize = 9.sp
@@ -1313,7 +1484,7 @@ private fun IQOORecentSettlementsSection(
                         Icon(
                             imageVector = Icons.Default.CheckCircle,
                             contentDescription = null,
-                            tint = SettledGreen,
+                            tint = colors.settledGreen,
                             modifier = Modifier.size(18.dp)
                         )
                         Column {
@@ -1321,12 +1492,12 @@ private fun IQOORecentSettlementsSection(
                                 text = "Settled ${settlement.settledAmount.formatRupees()} for ${settlement.customerName}$appText",
                                 style = MaterialTheme.typography.bodySmall,
                                 fontWeight = FontWeight.SemiBold,
-                                color = TextPrimary
+                                color = colors.textPrimary
                             )
                             Text(
                                 text = timeFormatted,
                                 style = MaterialTheme.typography.labelSmall,
-                                color = TextTertiary,
+                                color = colors.textTertiary,
                                 fontSize = 11.sp
                             )
                         }
@@ -1334,7 +1505,7 @@ private fun IQOORecentSettlementsSection(
                     Icon(
                         imageVector = Icons.AutoMirrored.Filled.ArrowForward,
                         contentDescription = null,
-                        tint = TextTertiary,
+                        tint = colors.textTertiary,
                         modifier = Modifier.size(14.dp)
                     )
                 }
