@@ -8,6 +8,7 @@ import androidx.compose.material3.dynamicDarkColorScheme
 import androidx.compose.material3.dynamicLightColorScheme
 import androidx.compose.material3.lightColorScheme
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 
@@ -24,41 +25,42 @@ private val IQOODarkColorScheme = darkColorScheme(
     onTertiary = Color(0xFF003822),
     tertiaryContainer = SettledGreenContainer,
     onTertiaryContainer = Color(0xFFA7F3D0),
-    background = BackgroundDark,
-    onBackground = TextPrimary,
-    surface = SurfaceDark,
-    onSurface = TextPrimary,
-    surfaceVariant = SurfaceElevatedDark,
-    onSurfaceVariant = TextSecondary,
-    outline = BorderMediumDark,
-    outlineVariant = BorderSubtleDark
+    background = DarkPakkaColors.background,
+    onBackground = DarkPakkaColors.textPrimary,
+    surface = DarkPakkaColors.surface,
+    onSurface = DarkPakkaColors.textPrimary,
+    surfaceVariant = DarkPakkaColors.surfaceElevated,
+    onSurfaceVariant = DarkPakkaColors.textSecondary,
+    outline = DarkPakkaColors.borderMedium,
+    outlineVariant = DarkPakkaColors.borderSubtle
 )
 
 private val IQOOLightColorScheme = lightColorScheme(
-    primary = Color(0xFF436B0B),
-    onPrimary = Color(0xFFFFFFFF),
-    primaryContainer = Color(0xFFCEF86C),
-    onPrimaryContainer = Color(0xFF132002),
-    secondary = PartialAmber,
-    onSecondary = GoldOnSecondary,
-    secondaryContainer = GoldSecondaryContainer,
-    onSecondaryContainer = GoldOnSecondaryContainer,
-    tertiary = SlateTertiary,
-    onTertiary = SlateOnTertiary,
-    tertiaryContainer = SlateTertiaryContainer,
-    onTertiaryContainer = SlateOnTertiaryContainer,
-    background = BackgroundLight,
-    onBackground = OnBackgroundLight,
-    surface = SurfaceLight,
-    onSurface = OnSurfaceLight,
-    surfaceVariant = SurfaceVariantLight,
-    onSurfaceVariant = OnSurfaceVariantLight,
-    outline = OutlineLight
+    primary = LightPakkaColors.limePrimary,
+    onPrimary = LightPakkaColors.onLimePrimary,
+    primaryContainer = LightPakkaColors.limeContainer,
+    onPrimaryContainer = LightPakkaColors.onLimeContainer,
+    secondary = LightPakkaColors.partialAmber,
+    onSecondary = Color(0xFFFFFFFF),
+    secondaryContainer = LightPakkaColors.partialAmberContainer,
+    onSecondaryContainer = LightPakkaColors.partialAmberText,
+    tertiary = LightPakkaColors.settledGreen,
+    onTertiary = Color(0xFFFFFFFF),
+    tertiaryContainer = LightPakkaColors.settledGreenContainer,
+    onTertiaryContainer = LightPakkaColors.settledGreenText,
+    background = LightPakkaColors.background,
+    onBackground = LightPakkaColors.textPrimary,
+    surface = LightPakkaColors.surface,
+    onSurface = LightPakkaColors.textPrimary,
+    surfaceVariant = LightPakkaColors.surfaceElevated,
+    onSurfaceVariant = LightPakkaColors.textSecondary,
+    outline = LightPakkaColors.borderMedium,
+    outlineVariant = LightPakkaColors.borderSubtle
 )
 
 @Composable
 fun PakkaKhataTheme(
-    darkTheme: Boolean = true, // Dark-first iQOO system aesthetic
+    darkTheme: Boolean = isSystemInDarkTheme(),
     dynamicColor: Boolean = false, // Keep signature electric-lime & graphite palette
     content: @Composable () -> Unit
 ) {
@@ -71,11 +73,17 @@ fun PakkaKhataTheme(
         else -> IQOOLightColorScheme
     }
 
-    MaterialTheme(
-        colorScheme = colorScheme,
-        typography = Typography,
-        content = content
-    )
+    val pakkaColors = if (darkTheme) DarkPakkaColors else LightPakkaColors
+
+    CompositionLocalProvider(
+        LocalPakkaColors provides pakkaColors
+    ) {
+        MaterialTheme(
+            colorScheme = colorScheme,
+            typography = Typography,
+            content = content
+        )
+    }
 }
 
 /**
