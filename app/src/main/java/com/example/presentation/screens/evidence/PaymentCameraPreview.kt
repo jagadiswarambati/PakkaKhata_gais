@@ -61,8 +61,8 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.viewinterop.AndroidView
 import androidx.core.content.ContextCompat
-import com.example.ui.theme.EmeraldPrimary
-import com.example.ui.theme.GoldSecondary
+import com.example.ui.theme.IQOOLime
+import com.example.ui.theme.IQOOOnLime
 import java.io.File
 
 @Composable
@@ -185,7 +185,7 @@ fun PaymentCameraPreview(
                     Icon(
                         imageVector = if (isTorchOn) Icons.Default.FlashOn else Icons.Default.FlashOff,
                         contentDescription = "Flash Toggle",
-                        tint = if (isTorchOn) GoldSecondary else Color.White
+                        tint = if (isTorchOn) IQOOLime else Color.White
                     )
                 }
             }
@@ -246,7 +246,7 @@ fun PaymentCameraPreview(
                         .border(4.dp, Color.White, CircleShape)
                         .padding(6.dp)
                         .clip(CircleShape)
-                        .background(EmeraldPrimary)
+                        .background(IQOOLime)
                         .testTag("shutter_capture_button"),
                     contentAlignment = Alignment.Center
                 ) {
@@ -274,7 +274,7 @@ fun PaymentCameraPreview(
                         Icon(
                             imageVector = Icons.Default.PhotoCamera,
                             contentDescription = "Capture Photo",
-                            tint = Color.White,
+                            tint = IQOOOnLime,
                             modifier = Modifier.size(36.dp)
                         )
                     }
@@ -328,9 +328,9 @@ private fun FramingGuideOverlay(modifier: Modifier = Modifier) {
             drawRect(Color.Black.copy(alpha = 0.45f))
         }
 
-        // Draw golden/emerald targeting corner markers
+        // Draw targeting corner markers
         drawRoundRect(
-            color = EmeraldPrimary,
+            color = IQOOLime,
             topLeft = Offset(left, top),
             size = Size(frameWidth, frameHeight),
             cornerRadius = CornerRadius(20.dp.toPx(), 20.dp.toPx()),
