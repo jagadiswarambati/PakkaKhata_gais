@@ -17,6 +17,7 @@ import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
@@ -334,5 +335,40 @@ class HomeViewModel @JvmOverloads constructor(
     fun dismissVoiceEntry() {
         speechProvider.stopListening()
         _voiceCreditState.value = VoiceCreditUiState(state = VoiceEntryState.IDLE)
+    }
+
+    /**
+     * Loads the official hackathon presentation scenario: Ramesh Kumar ₹500 credit.
+     */
+    fun loadDemoScenario() {
+        viewModelScope.launch {
+            ledgerRepository.loadDemoScenario()
+        }
+    }
+
+    /**
+     * Resets all ledger data to provide a clean state for live hackathon demos.
+     */
+    fun resetLedgerForDemo() {
+        viewModelScope.launch {
+            ledgerRepository.resetLedgerForDemo()
+        }
+    }
+
+    /**
+     * Exports local store ledger summary to laptop via Office Kit / Android Share Sheet.
+     */
+    fun exportLedgerReport(context: android.content.Context) {
+        viewModelScope.launch {
+            val state = uiState.value
+            val customers = ledgerRepository.customerRepo.getAllCustomers().first()
+            val report = com.example.domain.officebridge.OfficeBridgeService.generateLedgerReport(
+                customers = customers,
+                totalOutstanding = state.totalOutstanding,
+                activeObligationsCount = state.openObligationsCount,
+                settledCount = state.recentlySettledCount
+            )
+            com.example.domain.officebridge.OfficeBridgeService.shareLedgerReport(context, report)
+        }
     }
 }
