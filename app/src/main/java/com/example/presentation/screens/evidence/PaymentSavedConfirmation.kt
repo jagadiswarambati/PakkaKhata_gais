@@ -30,26 +30,12 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import com.example.ui.theme.BackgroundDark
-import com.example.ui.theme.BorderMediumDark
-import com.example.ui.theme.IQOOLime
-import com.example.ui.theme.IQOOLimeContainer
-import com.example.ui.theme.IQOOOnLime
-import com.example.ui.theme.PartialAmber
-import com.example.ui.theme.PartialAmberContainer
-import com.example.ui.theme.SettledGreen
-import com.example.ui.theme.SettledGreenContainer
-import com.example.ui.theme.SurfaceCardElevated
-import com.example.ui.theme.SurfaceHigherDark
-import com.example.ui.theme.TextPrimary
-import com.example.ui.theme.TextSecondary
-import com.example.ui.theme.TextTertiary
+import com.example.ui.theme.PakkaTheme
 
 @Composable
 fun PaymentSavedConfirmation(
@@ -60,10 +46,12 @@ fun PaymentSavedConfirmation(
     modifier: Modifier = Modifier,
     onReconcile: ((Long) -> Unit)? = null
 ) {
+    val colors = PakkaTheme.colors
+
     Box(
         modifier = modifier
             .fillMaxSize()
-            .background(BackgroundDark)
+            .background(colors.background)
             .padding(24.dp)
             .testTag("payment_saved_confirmation"),
         contentAlignment = Alignment.Center
@@ -76,13 +64,13 @@ fun PaymentSavedConfirmation(
             Box(
                 modifier = Modifier
                     .size(80.dp)
-                    .background(SettledGreenContainer, CircleShape),
+                    .background(colors.settledGreenContainer, CircleShape),
                 contentAlignment = Alignment.Center
             ) {
                 Icon(
                     imageVector = Icons.Default.Check,
                     contentDescription = "Success",
-                    tint = SettledGreen,
+                    tint = colors.settledGreen,
                     modifier = Modifier.size(44.dp)
                 )
             }
@@ -94,14 +82,14 @@ fun PaymentSavedConfirmation(
                 style = MaterialTheme.typography.headlineSmall,
                 fontWeight = FontWeight.ExtraBold,
                 textAlign = TextAlign.Center,
-                color = TextPrimary
+                color = colors.textPrimary
             )
 
             Spacer(modifier = Modifier.height(8.dp))
 
             Surface(
                 shape = RoundedCornerShape(16.dp),
-                color = PartialAmberContainer,
+                color = colors.partialAmberContainer,
                 modifier = Modifier.padding(vertical = 4.dp)
             ) {
                 Row(
@@ -111,7 +99,7 @@ fun PaymentSavedConfirmation(
                     Icon(
                         imageVector = Icons.Default.AutoAwesome,
                         contentDescription = null,
-                        tint = PartialAmber,
+                        tint = colors.partialAmber,
                         modifier = Modifier.size(14.dp)
                     )
                     Spacer(modifier = Modifier.width(6.dp))
@@ -119,7 +107,7 @@ fun PaymentSavedConfirmation(
                         text = "READY FOR RECONCILIATION",
                         style = MaterialTheme.typography.labelSmall,
                         fontWeight = FontWeight.Bold,
-                        color = PartialAmber,
+                        color = colors.partialAmber,
                         letterSpacing = 0.5.sp
                     )
                 }
@@ -131,9 +119,9 @@ fun PaymentSavedConfirmation(
             Card(
                 shape = RoundedCornerShape(22.dp),
                 colors = CardDefaults.cardColors(
-                    containerColor = SurfaceCardElevated
+                    containerColor = colors.surfaceCardElevated
                 ),
-                border = androidx.compose.foundation.BorderStroke(1.dp, BorderMediumDark),
+                border = androidx.compose.foundation.BorderStroke(1.dp, colors.borderMedium),
                 modifier = Modifier.fillMaxWidth()
             ) {
                 Column(modifier = Modifier.padding(18.dp)) {
@@ -142,12 +130,12 @@ fun PaymentSavedConfirmation(
                         horizontalArrangement = Arrangement.SpaceBetween,
                         verticalAlignment = Alignment.CenterVertically
                     ) {
-                        Text("Amount Received", style = MaterialTheme.typography.bodyMedium, color = TextSecondary)
+                        Text("Amount Received", style = MaterialTheme.typography.bodyMedium, color = colors.textSecondary)
                         Text(
                             text = "₹${extractedDetails.amountRupees}",
                             style = MaterialTheme.typography.titleLarge,
                             fontWeight = FontWeight.ExtraBold,
-                            color = IQOOLime
+                            color = colors.limePrimary
                         )
                     }
 
@@ -158,12 +146,12 @@ fun PaymentSavedConfirmation(
                         horizontalArrangement = Arrangement.SpaceBetween,
                         verticalAlignment = Alignment.CenterVertically
                     ) {
-                        Text("Paid By", style = MaterialTheme.typography.bodyMedium, color = TextSecondary)
+                        Text("Paid By", style = MaterialTheme.typography.bodyMedium, color = colors.textSecondary)
                         Text(
                             text = extractedDetails.senderName.ifBlank { "Not detected" },
                             style = MaterialTheme.typography.bodyMedium,
                             fontWeight = FontWeight.SemiBold,
-                            color = TextPrimary
+                            color = colors.textPrimary
                         )
                     }
 
@@ -174,12 +162,12 @@ fun PaymentSavedConfirmation(
                         horizontalArrangement = Arrangement.SpaceBetween,
                         verticalAlignment = Alignment.CenterVertically
                     ) {
-                        Text("UPI Ref / UTR", style = MaterialTheme.typography.bodyMedium, color = TextSecondary)
+                        Text("UPI Ref / UTR", style = MaterialTheme.typography.bodyMedium, color = colors.textSecondary)
                         Text(
                             text = extractedDetails.utrNumber.ifBlank { "Not detected" },
                             style = MaterialTheme.typography.bodyMedium,
                             fontWeight = FontWeight.SemiBold,
-                            color = TextSecondary
+                            color = colors.textSecondary
                         )
                     }
 
@@ -190,12 +178,12 @@ fun PaymentSavedConfirmation(
                             horizontalArrangement = Arrangement.SpaceBetween,
                             verticalAlignment = Alignment.CenterVertically
                         ) {
-                            Text("Payment App", style = MaterialTheme.typography.bodyMedium, color = TextSecondary)
+                            Text("Payment App", style = MaterialTheme.typography.bodyMedium, color = colors.textSecondary)
                             Text(
                                 text = extractedDetails.paymentApp,
                                 style = MaterialTheme.typography.bodyMedium,
                                 fontWeight = FontWeight.SemiBold,
-                                color = TextSecondary
+                                color = colors.textSecondary
                             )
                         }
                     }
@@ -209,8 +197,8 @@ fun PaymentSavedConfirmation(
                 Button(
                     onClick = { onReconcile(evidenceId) },
                     colors = ButtonDefaults.buttonColors(
-                        containerColor = IQOOLime,
-                        contentColor = IQOOOnLime
+                        containerColor = colors.limePrimary,
+                        contentColor = colors.onLimePrimary
                     ),
                     shape = RoundedCornerShape(16.dp),
                     modifier = Modifier
@@ -234,8 +222,8 @@ fun PaymentSavedConfirmation(
             OutlinedButton(
                 onClick = onNavigateBack,
                 shape = RoundedCornerShape(16.dp),
-                colors = ButtonDefaults.outlinedButtonColors(contentColor = TextPrimary),
-                border = androidx.compose.foundation.BorderStroke(1.dp, BorderMediumDark),
+                colors = ButtonDefaults.outlinedButtonColors(contentColor = colors.textPrimary),
+                border = androidx.compose.foundation.BorderStroke(1.dp, colors.borderMedium),
                 modifier = Modifier
                     .fillMaxWidth()
                     .height(48.dp)
@@ -253,14 +241,14 @@ fun PaymentSavedConfirmation(
             OutlinedButton(
                 onClick = onCaptureAnother,
                 shape = RoundedCornerShape(16.dp),
-                colors = ButtonDefaults.outlinedButtonColors(contentColor = TextSecondary),
-                border = androidx.compose.foundation.BorderStroke(1.dp, BorderMediumDark),
+                colors = ButtonDefaults.outlinedButtonColors(contentColor = colors.textSecondary),
+                border = androidx.compose.foundation.BorderStroke(1.dp, colors.borderMedium),
                 modifier = Modifier
                     .fillMaxWidth()
                     .height(48.dp)
                     .testTag("btn_capture_another")
             ) {
-                Icon(imageVector = Icons.Default.PhotoCamera, contentDescription = null, tint = IQOOLime)
+                Icon(imageVector = Icons.Default.PhotoCamera, contentDescription = null, tint = colors.limePrimary)
                 Spacer(modifier = Modifier.width(8.dp))
                 Text("Capture Another Payment")
             }
