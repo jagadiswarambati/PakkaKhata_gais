@@ -2,51 +2,69 @@ package com.example.ui.theme
 
 import androidx.compose.ui.graphics.Color
 
-// Primary Emerald Theme (Kirana Ledger Palette)
-val EmeraldPrimary = Color(0xFF0B5D42)
-val EmeraldOnPrimary = Color(0xFFFFFFFF)
-val EmeraldPrimaryContainer = Color(0xFFA3F2CD)
-val EmeraldOnPrimaryContainer = Color(0xFF002114)
+// =========================================================================
+// iQOO Native System Feature - Color Palette
+// Bold, dark-first, graphite surfaces, tactical neon-lime accent
+// =========================================================================
 
-// Gold / Khaki Accents (Indian Retail Traditional Ledger Accents)
-val GoldSecondary = Color(0xFF795900)
-val GoldOnSecondary = Color(0xFFFFFFFF)
-val GoldSecondaryContainer = Color(0xFFFFE086)
-val GoldOnSecondaryContainer = Color(0xFF251A00)
+// Primary iQOO Signature Accent (Electric Lime)
+val IQOOLime = Color(0xFFB8F34A)
+val IQOOLimeLight = Color(0xFFCEF86C)
+val IQOOLimeDim = Color(0xFF86B828)
+val IQOOLimeContainer = Color(0xFF1E2D0D)
+val IQOOOnLime = Color(0xFF091202)
+val IQOOOnLimeContainer = Color(0xFFD8FAA4)
 
-// Slate / Teal
-val SlateTertiary = Color(0xFF1B6585)
-val SlateOnTertiary = Color(0xFFFFFFFF)
-val SlateTertiaryContainer = Color(0xFFC3E8FF)
-val SlateOnTertiaryContainer = Color(0xFF001E2C)
+// Background & Graphite Surfaces
+val BackgroundDark = Color(0xFF070908)        // Deep near-black background
+val SurfaceDark = Color(0xFF111512)           // Base card surface
+val SurfaceElevatedDark = Color(0xFF171D19)   // Elevated card surface
+val SurfaceHigherDark = Color(0xFF202822)     // Popovers, dialogs, sheets
+val SurfaceCard = Color(0xFF131814)
+val SurfaceCardElevated = Color(0xFF1A211C)
 
-// Surfaces & Backgrounds (Light)
-val BackgroundLight = Color(0xFFFBFDF9)
-val OnBackgroundLight = Color(0xFF191C1A)
-val SurfaceLight = Color(0xFFFBFDF9)
-val OnSurfaceLight = Color(0xFF191C1A)
-val SurfaceVariantLight = Color(0xFFDCE5DD)
-val OnSurfaceVariantLight = Color(0xFF404943)
-val OutlineLight = Color(0xFF707973)
+// Borders & Dividers
+val BorderSubtleDark = Color(0xFF1F2922)
+val BorderMediumDark = Color(0xFF2E3D33)
+val BorderAccentDark = Color(0x33B8F34A)
 
-// Dark Theme Colors
-val EmeraldPrimaryDark = Color(0xFF87D5B2)
-val EmeraldOnPrimaryDark = Color(0xFF003825)
-val EmeraldPrimaryContainerDark = Color(0xFF005238)
-val EmeraldOnPrimaryContainerDark = Color(0xFFA3F2CD)
+// Typography Colors
+val TextPrimary = Color(0xFFF5F7F5)
+val TextSecondary = Color(0xFF9BA49F)
+val TextTertiary = Color(0xFF68746D)
+val TextOnAccent = Color(0xFF091202)
 
-val GoldSecondaryDark = Color(0xFFF2C144)
-val GoldOnSecondaryDark = Color(0xFF402D00)
-val GoldSecondaryContainerDark = Color(0xFF5B4300)
-val GoldOnSecondaryContainerDark = Color(0xFFFFE086)
+// Status & Financial Indicators
+val SettledGreen = Color(0xFF34D399)
+val SettledGreenContainer = Color(0xFF063824)
+val PartialAmber = Color(0xFFFBBF24)
+val PartialAmberContainer = Color(0xFF3D2702)
+val OpenRed = Color(0xFFF87171)
+val OpenRedContainer = Color(0xFF381010)
+val OverpaidBlue = Color(0xFF60A5FA)
+val OverpaidBlueContainer = Color(0xFF0C274A)
 
-val BackgroundDark = Color(0xFF111412)
-val OnBackgroundDark = Color(0xFFE1E3DF)
-val SurfaceDark = Color(0xFF111412)
-val OnSurfaceDark = Color(0xFFE1E3DF)
+// Backward-compatible mappings for existing references across codebase
+val EmeraldPrimary = IQOOLime
+val EmeraldOnPrimary = IQOOOnLime
+val EmeraldPrimaryContainer = IQOOLimeContainer
+val EmeraldOnPrimaryContainer = IQOOOnLimeContainer
 
-// Status colors
-val SettledGreen = Color(0xFF1B873F)
-val PartialAmber = Color(0xFFD97706)
-val OverpaidBlue = Color(0xFF2563EB)
-val OpenRed = Color(0xFFDC2626)
+val GoldSecondary = PartialAmber
+val GoldOnSecondary = Color(0xFF1A1300)
+val GoldSecondaryContainer = PartialAmberContainer
+val GoldOnSecondaryContainer = Color(0xFFFFDF88)
+
+val SlateTertiary = OverpaidBlue
+val SlateOnTertiary = Color(0xFF001E36)
+val SlateTertiaryContainer = OverpaidBlueContainer
+val SlateOnTertiaryContainer = Color(0xFFD1E4FF)
+
+// Light theme fallback (if system explicitly requests light mode)
+val BackgroundLight = Color(0xFFF6F8F6)
+val OnBackgroundLight = Color(0xFF121613)
+val SurfaceLight = Color(0xFFFFFFFF)
+val OnSurfaceLight = Color(0xFF121613)
+val SurfaceVariantLight = Color(0xFFE2E7E3)
+val OnSurfaceVariantLight = Color(0xFF444D46)
+val OutlineLight = Color(0xFF747F77)
