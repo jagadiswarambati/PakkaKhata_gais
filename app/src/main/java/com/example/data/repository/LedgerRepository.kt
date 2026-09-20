@@ -69,6 +69,16 @@ interface LedgerRepository {
         voiceTranscript: String? = null,
         notes: String? = null
     ): Result<Obligation>
+
+    /**
+     * Resets the entire local ledger state for a clean demo demonstration.
+     */
+    suspend fun resetLedgerForDemo()
+
+    /**
+     * Loads the official hackathon demo baseline: Ramesh Kumar ₹500 credit obligation.
+     */
+    suspend fun loadDemoScenario(): Result<Obligation>
 }
 
 class LedgerRepositoryImpl(
@@ -196,5 +206,18 @@ class LedgerRepositoryImpl(
             val obligationId = database.obligationDao().insertObligation(obligationEntity)
             obligationEntity.copy(id = obligationId).toDomain()
         }
+    }
+
+    override suspend fun resetLedgerForDemo() {
+        database.clearAllTables()
+    }
+
+    override suspend fun loadDemoScenario(): Result<Obligation> {
+        return recordCreditObligation(
+            customerName = "Ramesh Kumar",
+            amount = Money.fromRupees(500.0),
+            voiceTranscript = "Ramesh took 500 rupees credit",
+            notes = "Demo Scenario: Grocery items"
+        )
     }
 }
