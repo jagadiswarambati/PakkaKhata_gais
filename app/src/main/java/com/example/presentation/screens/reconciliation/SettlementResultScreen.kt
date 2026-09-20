@@ -19,7 +19,6 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.CheckCircle
 import androidx.compose.material.icons.filled.Info
-import androidx.compose.material.icons.filled.Person
 import androidx.compose.material.icons.filled.Warning
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
@@ -28,7 +27,6 @@ import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CenterAlignedTopAppBar
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
@@ -47,29 +45,8 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
-import com.example.domain.model.ObligationStatus
 import com.example.domain.model.SettlementOutcome
-import com.example.ui.theme.BackgroundDark
-import com.example.ui.theme.BorderMediumDark
-import com.example.ui.theme.BorderSubtleDark
-import com.example.ui.theme.IQOOLime
-import com.example.ui.theme.IQOOLimeContainer
-import com.example.ui.theme.IQOOOnLime
-import com.example.ui.theme.OpenRed
-import com.example.ui.theme.OpenRedContainer
-import com.example.ui.theme.OverpaidBlue
-import com.example.ui.theme.PartialAmber
-import com.example.ui.theme.PartialAmberContainer
-import com.example.ui.theme.SettledGreen
-import com.example.ui.theme.SettledGreenContainer
-import com.example.ui.theme.SurfaceCard
-import com.example.ui.theme.SurfaceCardElevated
-import com.example.ui.theme.SurfaceDark
-import com.example.ui.theme.SurfaceElevatedDark
-import com.example.ui.theme.SurfaceHigherDark
-import com.example.ui.theme.TextPrimary
-import com.example.ui.theme.TextSecondary
-import com.example.ui.theme.TextTertiary
+import com.example.ui.theme.PakkaTheme
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -79,6 +56,7 @@ fun SettlementResultScreen(
     modifier: Modifier = Modifier,
     viewModel: SettlementResultViewModel = viewModel()
 ) {
+    val colors = PakkaTheme.colors
     val uiState by viewModel.uiState.collectAsState()
 
     LaunchedEffect(reconciliationId) {
@@ -86,7 +64,7 @@ fun SettlementResultScreen(
     }
 
     Scaffold(
-        containerColor = BackgroundDark,
+        containerColor = colors.background,
         topBar = {
             CenterAlignedTopAppBar(
                 title = {
@@ -94,11 +72,11 @@ fun SettlementResultScreen(
                         text = "Settlement Result",
                         style = MaterialTheme.typography.titleMedium,
                         fontWeight = FontWeight.Bold,
-                        color = TextPrimary
+                        color = colors.textPrimary
                     )
                 },
                 colors = TopAppBarDefaults.centerAlignedTopAppBarColors(
-                    containerColor = SurfaceElevatedDark
+                    containerColor = colors.surfaceElevated
                 )
             )
         },
@@ -116,12 +94,12 @@ fun SettlementResultScreen(
                         verticalArrangement = Arrangement.Center,
                         horizontalAlignment = Alignment.CenterHorizontally
                     ) {
-                        CircularProgressIndicator(color = IQOOLime)
+                        CircularProgressIndicator(color = colors.limePrimary)
                         Spacer(modifier = Modifier.height(16.dp))
                         Text(
                             text = "Loading settlement record...",
                             style = MaterialTheme.typography.bodyMedium,
-                            color = TextSecondary
+                            color = colors.textSecondary
                         )
                     }
                 }
@@ -137,19 +115,22 @@ fun SettlementResultScreen(
                         Icon(
                             imageVector = Icons.Default.Warning,
                             contentDescription = null,
-                            tint = OpenRed,
+                            tint = colors.openRed,
                             modifier = Modifier.size(48.dp)
                         )
                         Spacer(modifier = Modifier.height(12.dp))
                         Text(
                             text = uiState.errorMessage ?: "Unknown error",
                             style = MaterialTheme.typography.bodyLarge,
-                            color = OpenRed
+                            color = colors.openRed
                         )
                         Spacer(modifier = Modifier.height(16.dp))
                         Button(
                             onClick = onDone,
-                            colors = ButtonDefaults.buttonColors(containerColor = IQOOLime, contentColor = IQOOOnLime),
+                            colors = ButtonDefaults.buttonColors(
+                                containerColor = colors.limePrimary,
+                                contentColor = colors.onLimePrimary
+                            ),
                             shape = RoundedCornerShape(14.dp)
                         ) {
                             Text("Return to Ledger", fontWeight = FontWeight.Bold)
@@ -176,23 +157,23 @@ fun SettlementResultScreen(
                             // Big status indicator
                             val (badgeBg, badgeFg, statusTitle) = when (reconciliation.matchType) {
                                 SettlementOutcome.FULLY_SETTLED -> Triple(
-                                    SettledGreenContainer,
-                                    SettledGreen,
+                                    colors.settledGreenContainer,
+                                    colors.settledGreen,
                                     "FULLY SETTLED"
                                 )
                                 SettlementOutcome.PARTIALLY_SETTLED -> Triple(
-                                    PartialAmberContainer,
-                                    PartialAmber,
+                                    colors.partialAmberContainer,
+                                    colors.partialAmber,
                                     "PARTIALLY SETTLED"
                                 )
                                 SettlementOutcome.OVERPAID -> Triple(
-                                    SurfaceHigherDark,
-                                    OverpaidBlue,
+                                    colors.overpaidBlueContainer,
+                                    colors.overpaidBlue,
                                     "OVERPAID"
                                 )
                                 else -> Triple(
-                                    SurfaceHigherDark,
-                                    TextSecondary,
+                                    colors.surfaceHigher,
+                                    colors.textSecondary,
                                     reconciliation.matchType.name
                                 )
                             }
@@ -205,7 +186,7 @@ fun SettlementResultScreen(
                                 Box(contentAlignment = Alignment.Center) {
                                     Icon(
                                         imageVector = if (reconciliation.matchType == SettlementOutcome.FULLY_SETTLED) {
-                                            Icons.Default.CheckCircle
+                                             Icons.Default.CheckCircle
                                         } else Icons.Default.Check,
                                         contentDescription = null,
                                         tint = badgeFg,
@@ -221,7 +202,7 @@ fun SettlementResultScreen(
                                 text = "${reconciliation.settledAmount.formatRupees()} received",
                                 style = MaterialTheme.typography.headlineMedium,
                                 fontWeight = FontWeight.Black,
-                                color = SettledGreen
+                                color = colors.settledGreen
                             )
 
                             Spacer(modifier = Modifier.height(4.dp))
@@ -230,7 +211,7 @@ fun SettlementResultScreen(
                                 text = "${obligation.remainingAmount.formatRupees()} remaining",
                                 style = MaterialTheme.typography.titleMedium,
                                 fontWeight = FontWeight.Bold,
-                                color = if (obligation.remainingAmount.isZero) SettledGreen else OpenRed
+                                color = if (obligation.remainingAmount.isZero) colors.settledGreen else colors.openRed
                             )
 
                             Spacer(modifier = Modifier.height(12.dp))
@@ -257,9 +238,9 @@ fun SettlementResultScreen(
                             Card(
                                 shape = RoundedCornerShape(22.dp),
                                 colors = CardDefaults.cardColors(
-                                    containerColor = SurfaceCardElevated
+                                    containerColor = colors.surfaceCardElevated
                                 ),
-                                border = androidx.compose.foundation.BorderStroke(1.dp, BorderMediumDark),
+                                border = androidx.compose.foundation.BorderStroke(1.dp, colors.borderMedium),
                                 modifier = Modifier.fillMaxWidth()
                             ) {
                                 Column(modifier = Modifier.padding(20.dp)) {
@@ -267,7 +248,7 @@ fun SettlementResultScreen(
                                         text = "TRANSACTION SUMMARY",
                                         style = MaterialTheme.typography.labelSmall,
                                         fontWeight = FontWeight.ExtraBold,
-                                        color = TextSecondary,
+                                        color = colors.textSecondary,
                                         letterSpacing = 1.sp
                                     )
 
@@ -285,12 +266,12 @@ fun SettlementResultScreen(
                                     SummaryRow(
                                         label = "Settled In Payment",
                                         value = reconciliation.settledAmount.formatRupees(),
-                                        highlightColor = SettledGreen
+                                        highlightColor = colors.settledGreen
                                     )
                                     SummaryRow(
                                         label = "Remaining Due",
                                         value = obligation.remainingAmount.formatRupees(),
-                                        highlightColor = if (obligation.remainingAmount.isZero) SettledGreen else OpenRed
+                                        highlightColor = if (obligation.remainingAmount.isZero) colors.settledGreen else colors.openRed
                                     )
 
                                     if (evidence?.utrNumber != null) {
@@ -308,14 +289,65 @@ fun SettlementResultScreen(
                                 }
                             }
 
-                            Spacer(modifier = Modifier.height(32.dp))
+                            Spacer(modifier = Modifier.height(24.dp))
+
+                            // Office Kit Shared Clipboard action
+                            val context = androidx.compose.ui.platform.LocalContext.current
+                            androidx.compose.material3.OutlinedButton(
+                                onClick = {
+                                    val summary = com.example.domain.officebridge.OfficeBridgeService.formatSettlementClipboardSummary(
+                                        customerName = customer.name,
+                                        originalCredit = obligation.originalAmount,
+                                        paymentReceived = reconciliation.settledAmount,
+                                        remainingDue = obligation.remainingAmount,
+                                        status = reconciliation.matchType,
+                                        utrNumber = evidence?.utrNumber,
+                                        paymentApp = evidence?.paymentApp,
+                                        timestamp = java.util.Date(reconciliation.reconciledAt)
+                                    )
+                                    val success = com.example.domain.officebridge.OfficeBridgeService.copyToClipboard(
+                                        context = context,
+                                        label = "PakkaKhata Settlement",
+                                        text = summary
+                                    )
+                                    if (success) {
+                                        android.widget.Toast.makeText(
+                                            context,
+                                            "Copied for Office Kit Shared Clipboard",
+                                            android.widget.Toast.LENGTH_SHORT
+                                        ).show()
+                                    }
+                                },
+                                shape = RoundedCornerShape(16.dp),
+                                border = androidx.compose.foundation.BorderStroke(1.dp, colors.limePrimary),
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .height(48.dp)
+                                    .testTag("btn_copy_office_kit_summary")
+                            ) {
+                                Icon(
+                                    imageVector = Icons.Default.Info,
+                                    contentDescription = null,
+                                    tint = colors.limePrimary,
+                                    modifier = Modifier.size(18.dp)
+                                )
+                                Spacer(modifier = Modifier.width(8.dp))
+                                Text(
+                                    text = "Copy for Office Kit (Shared Clipboard)",
+                                    style = MaterialTheme.typography.bodyMedium,
+                                    fontWeight = FontWeight.SemiBold,
+                                    color = colors.limePrimary
+                                )
+                            }
+
+                            Spacer(modifier = Modifier.height(12.dp))
 
                             // Done action button
                             Button(
                                 onClick = onDone,
                                 colors = ButtonDefaults.buttonColors(
-                                    containerColor = IQOOLime,
-                                    contentColor = IQOOOnLime
+                                    containerColor = colors.limePrimary,
+                                    contentColor = colors.onLimePrimary
                                 ),
                                 shape = RoundedCornerShape(16.dp),
                                 modifier = Modifier
@@ -346,6 +378,7 @@ private fun SummaryRow(
     highlightColor: Color? = null,
     modifier: Modifier = Modifier
 ) {
+    val colors = PakkaTheme.colors
     Row(
         modifier = modifier
             .fillMaxWidth()
@@ -356,13 +389,13 @@ private fun SummaryRow(
         Text(
             text = label,
             style = MaterialTheme.typography.bodySmall,
-            color = TextSecondary
+            color = colors.textSecondary
         )
         Text(
             text = value,
             style = MaterialTheme.typography.bodyMedium,
             fontWeight = FontWeight.SemiBold,
-            color = highlightColor ?: TextPrimary
+            color = highlightColor ?: colors.textPrimary
         )
     }
 }
