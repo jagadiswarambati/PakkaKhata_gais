@@ -24,13 +24,11 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.CheckCircle
-import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material.icons.filled.ErrorOutline
 import androidx.compose.material.icons.filled.Keyboard
 import androidx.compose.material.icons.filled.Mic
 import androidx.compose.material.icons.filled.Refresh
-import androidx.compose.material.icons.filled.Shield
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
@@ -38,7 +36,6 @@ import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.OutlinedButton
@@ -63,26 +60,7 @@ import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import com.example.ui.theme.BackgroundDark
-import com.example.ui.theme.BorderAccentDark
-import com.example.ui.theme.BorderMediumDark
-import com.example.ui.theme.BorderSubtleDark
-import com.example.ui.theme.IQOOLime
-import com.example.ui.theme.IQOOLimeContainer
-import com.example.ui.theme.IQOOOnLime
-import com.example.ui.theme.OpenRed
-import com.example.ui.theme.PartialAmber
-import com.example.ui.theme.PartialAmberContainer
-import com.example.ui.theme.SettledGreen
-import com.example.ui.theme.SettledGreenContainer
-import com.example.ui.theme.SurfaceCard
-import com.example.ui.theme.SurfaceCardElevated
-import com.example.ui.theme.SurfaceDark
-import com.example.ui.theme.SurfaceElevatedDark
-import com.example.ui.theme.SurfaceHigherDark
-import com.example.ui.theme.TextPrimary
-import com.example.ui.theme.TextSecondary
-import com.example.ui.theme.TextTertiary
+import com.example.ui.theme.PakkaTheme
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -101,11 +79,13 @@ fun VoiceCreditBottomSheet(
 ) {
     if (voiceState.state == VoiceEntryState.IDLE) return
 
+    val colors = PakkaTheme.colors
+
     ModalBottomSheet(
         onDismissRequest = onDismiss,
         sheetState = sheetState,
         modifier = modifier.testTag("voice_credit_bottom_sheet"),
-        containerColor = SurfaceCardElevated,
+        containerColor = colors.surfaceCardElevated,
         shape = RoundedCornerShape(topStart = 28.dp, topEnd = 28.dp),
         dragHandle = {
             Box(
@@ -114,7 +94,7 @@ fun VoiceCreditBottomSheet(
                     .width(40.dp)
                     .height(4.dp)
                     .clip(RoundedCornerShape(2.dp))
-                    .background(BorderMediumDark)
+                    .background(colors.borderMedium)
             )
         }
     ) {
@@ -164,7 +144,7 @@ fun VoiceCreditBottomSheet(
 
                 VoiceEntryState.ERROR -> {
                     ErrorView(
-                        errorMessage = voiceState.errorMessage ?: "Speech recognition encountered an error",
+                        errorMessage = voiceState.errorMessage ?: "Could not recognize audio",
                         rawTranscript = voiceState.rawTranscript,
                         onRetry = onRetryVoice,
                         onManual = onStartManual,
@@ -172,7 +152,7 @@ fun VoiceCreditBottomSheet(
                     )
                 }
 
-                VoiceEntryState.IDLE -> Unit
+                VoiceEntryState.IDLE -> {}
             }
         }
     }
@@ -183,6 +163,7 @@ private fun ListeningView(
     onCancel: () -> Unit,
     onManual: () -> Unit
 ) {
+    val colors = PakkaTheme.colors
     val infiniteTransition = rememberInfiniteTransition(label = "pulse")
     val scale by infiniteTransition.animateFloat(
         initialValue = 1.0f,
@@ -196,26 +177,26 @@ private fun ListeningView(
 
     Spacer(modifier = Modifier.height(8.dp))
 
-    // Animated Mic Indicator with iQOO Lime Glow
+    // Animated Mic Indicator with Lime Glow
     Box(
         modifier = Modifier
             .size(108.dp)
             .scale(scale)
             .clip(CircleShape)
-            .background(IQOOLime.copy(alpha = 0.15f)),
+            .background(colors.limePrimary.copy(alpha = 0.15f)),
         contentAlignment = Alignment.Center
     ) {
         Box(
             modifier = Modifier
                 .size(72.dp)
                 .clip(CircleShape)
-                .background(IQOOLime),
+                .background(colors.limePrimary),
             contentAlignment = Alignment.Center
         ) {
             Icon(
                 imageVector = Icons.Default.Mic,
                 contentDescription = "Active Microphone",
-                tint = IQOOOnLime,
+                tint = colors.onLimePrimary,
                 modifier = Modifier.size(36.dp)
             )
         }
@@ -227,13 +208,13 @@ private fun ListeningView(
         text = "Listening for Credit...",
         style = MaterialTheme.typography.titleLarge,
         fontWeight = FontWeight.Bold,
-        color = TextPrimary
+        color = colors.textPrimary
     )
 
     Text(
         text = "Speak customer name and amount\ne.g., \"Ramesh 500 udhar\" or \"Suresh 250 doodh\"",
         style = MaterialTheme.typography.bodyMedium,
-        color = TextSecondary,
+        color = colors.textSecondary,
         textAlign = TextAlign.Center
     )
 
@@ -246,11 +227,11 @@ private fun ListeningView(
         OutlinedButton(
             onClick = onManual,
             shape = RoundedCornerShape(16.dp),
-            colors = ButtonDefaults.outlinedButtonColors(contentColor = TextPrimary),
-            border = androidx.compose.foundation.BorderStroke(1.dp, BorderMediumDark),
+            colors = ButtonDefaults.outlinedButtonColors(contentColor = colors.textPrimary),
+            border = androidx.compose.foundation.BorderStroke(1.dp, colors.borderMedium),
             modifier = Modifier.testTag("type_manually_button")
         ) {
-            Icon(Icons.Default.Keyboard, contentDescription = null, tint = IQOOLime, modifier = Modifier.size(18.dp))
+            Icon(Icons.Default.Keyboard, contentDescription = null, tint = colors.limePrimary, modifier = Modifier.size(18.dp))
             Spacer(modifier = Modifier.width(8.dp))
             Text("Type Manually")
         }
@@ -260,30 +241,31 @@ private fun ListeningView(
             shape = RoundedCornerShape(16.dp),
             modifier = Modifier.testTag("cancel_listening_button")
         ) {
-            Text("Cancel", color = TextSecondary)
+            Text("Cancel", color = colors.textSecondary)
         }
     }
 }
 
 @Composable
 private fun ProcessingView() {
+    val colors = PakkaTheme.colors
     Spacer(modifier = Modifier.height(16.dp))
     CircularProgressIndicator(
-        modifier = Modifier.size(54.dp),
-        color = IQOOLime,
+        modifier = Modifier.size(48.dp),
+        color = colors.limePrimary,
         strokeWidth = 4.dp
     )
     Spacer(modifier = Modifier.height(8.dp))
     Text(
-        text = "Extracting Credit Details...",
+        text = "Parsing Voice Note...",
         style = MaterialTheme.typography.titleMedium,
         fontWeight = FontWeight.Bold,
-        color = TextPrimary
+        color = colors.textPrimary
     )
     Text(
-        text = "Analyzing spoken customer name and amount",
+        text = "Extracting customer name & credit amount",
         style = MaterialTheme.typography.bodySmall,
-        color = TextSecondary
+        color = colors.textSecondary
     )
     Spacer(modifier = Modifier.height(16.dp))
 }
@@ -298,11 +280,13 @@ private fun ConfirmationView(
     onNoteChange: (String) -> Unit,
     onCancel: () -> Unit
 ) {
+    val colors = PakkaTheme.colors
+
     Text(
         text = "Credit Entry",
         style = MaterialTheme.typography.titleLarge,
         fontWeight = FontWeight.ExtraBold,
-        color = TextPrimary
+        color = colors.textPrimary
     )
 
     if (voiceState.isEditing) {
@@ -312,13 +296,13 @@ private fun ConfirmationView(
             verticalArrangement = Arrangement.spacedBy(12.dp)
         ) {
             val textFieldColors = OutlinedTextFieldDefaults.colors(
-                focusedBorderColor = IQOOLime,
-                unfocusedBorderColor = BorderMediumDark,
-                focusedLabelColor = IQOOLime,
-                unfocusedLabelColor = TextSecondary,
-                focusedTextColor = TextPrimary,
-                unfocusedTextColor = TextPrimary,
-                cursorColor = IQOOLime
+                focusedBorderColor = colors.limePrimary,
+                unfocusedBorderColor = colors.borderMedium,
+                focusedLabelColor = colors.limePrimary,
+                unfocusedLabelColor = colors.textSecondary,
+                focusedTextColor = colors.textPrimary,
+                unfocusedTextColor = colors.textPrimary,
+                cursorColor = colors.limePrimary
             )
 
             OutlinedTextField(
@@ -338,7 +322,7 @@ private fun ConfirmationView(
                 value = voiceState.amountRupees,
                 onValueChange = onAmountChange,
                 label = { Text("Amount (₹)") },
-                prefix = { Text("₹ ", color = IQOOLime) },
+                prefix = { Text("₹ ", color = colors.limePrimary) },
                 singleLine = true,
                 colors = textFieldColors,
                 shape = RoundedCornerShape(14.dp),
@@ -363,8 +347,8 @@ private fun ConfirmationView(
             Button(
                 onClick = { onToggleEdit(false) },
                 colors = ButtonDefaults.buttonColors(
-                    containerColor = SurfaceHigherDark,
-                    contentColor = TextPrimary
+                    containerColor = colors.surfaceElevated,
+                    contentColor = colors.textPrimary
                 ),
                 shape = RoundedCornerShape(14.dp),
                 modifier = Modifier
@@ -381,10 +365,10 @@ private fun ConfirmationView(
                 .fillMaxWidth()
                 .testTag("confirmation_card"),
             colors = CardDefaults.cardColors(
-                containerColor = SurfaceDark
+                containerColor = colors.surface
             ),
             shape = RoundedCornerShape(20.dp),
-            border = androidx.compose.foundation.BorderStroke(1.dp, BorderSubtleDark)
+            border = androidx.compose.foundation.BorderStroke(1.dp, colors.borderSubtle)
         ) {
             Column(
                 modifier = Modifier
@@ -397,27 +381,27 @@ private fun ConfirmationView(
                     text = voiceState.customerName.ifBlank { "Unknown Customer" },
                     style = MaterialTheme.typography.headlineMedium,
                     fontWeight = FontWeight.Bold,
-                    color = TextPrimary
+                    color = colors.textPrimary
                 )
 
                 Text(
                     text = "₹${voiceState.amountRupees.ifBlank { "0" }}",
                     style = MaterialTheme.typography.displaySmall,
                     fontWeight = FontWeight.ExtraBold,
-                    color = IQOOLime
+                    color = colors.limePrimary
                 )
 
                 if (voiceState.optionalNote.isNotBlank()) {
                     Surface(
                         shape = RoundedCornerShape(10.dp),
-                        color = SurfaceHigherDark,
-                        border = androidx.compose.foundation.BorderStroke(1.dp, BorderSubtleDark)
+                        color = colors.surfaceElevated,
+                        border = androidx.compose.foundation.BorderStroke(1.dp, colors.borderSubtle)
                     ) {
                         Text(
                             text = "Note: ${voiceState.optionalNote}",
                             style = MaterialTheme.typography.bodyMedium,
                             fontWeight = FontWeight.Medium,
-                            color = TextSecondary,
+                            color = colors.textSecondary,
                             modifier = Modifier.padding(horizontal = 12.dp, vertical = 4.dp)
                         )
                     }
@@ -429,7 +413,7 @@ private fun ConfirmationView(
                         text = "\"${voiceState.rawTranscript}\"",
                         style = MaterialTheme.typography.bodySmall,
                         fontStyle = FontStyle.Italic,
-                        color = TextTertiary,
+                        color = colors.textTertiary,
                         textAlign = TextAlign.Center
                     )
                 }
@@ -440,7 +424,7 @@ private fun ConfirmationView(
             Text(
                 text = voiceState.errorMessage,
                 style = MaterialTheme.typography.bodySmall,
-                color = OpenRed,
+                color = colors.openRed,
                 textAlign = TextAlign.Center
             )
         }
@@ -453,8 +437,8 @@ private fun ConfirmationView(
                 .height(52.dp)
                 .testTag("confirm_credit_button"),
             colors = ButtonDefaults.buttonColors(
-                containerColor = IQOOLime,
-                contentColor = IQOOOnLime
+                containerColor = colors.limePrimary,
+                contentColor = colors.onLimePrimary
             ),
             shape = RoundedCornerShape(16.dp)
         ) {
@@ -472,11 +456,11 @@ private fun ConfirmationView(
             OutlinedButton(
                 onClick = { onToggleEdit(true) },
                 shape = RoundedCornerShape(14.dp),
-                colors = ButtonDefaults.outlinedButtonColors(contentColor = TextPrimary),
-                border = androidx.compose.foundation.BorderStroke(1.dp, BorderMediumDark),
+                colors = ButtonDefaults.outlinedButtonColors(contentColor = colors.textPrimary),
+                border = androidx.compose.foundation.BorderStroke(1.dp, colors.borderMedium),
                 modifier = Modifier.testTag("edit_credit_button")
             ) {
-                Icon(Icons.Default.Edit, contentDescription = null, tint = IQOOLime, modifier = Modifier.size(16.dp))
+                Icon(Icons.Default.Edit, contentDescription = null, tint = colors.limePrimary, modifier = Modifier.size(16.dp))
                 Spacer(modifier = Modifier.width(6.dp))
                 Text("Edit")
             }
@@ -486,7 +470,7 @@ private fun ConfirmationView(
                 shape = RoundedCornerShape(14.dp),
                 modifier = Modifier.testTag("cancel_credit_button")
             ) {
-                Text("Cancel", color = TextSecondary)
+                Text("Cancel", color = colors.textSecondary)
             }
         }
     }
@@ -494,10 +478,11 @@ private fun ConfirmationView(
 
 @Composable
 private fun SavingView() {
+    val colors = PakkaTheme.colors
     Spacer(modifier = Modifier.height(16.dp))
     CircularProgressIndicator(
         modifier = Modifier.size(48.dp),
-        color = IQOOLime,
+        color = colors.limePrimary,
         strokeWidth = 4.dp
     )
     Spacer(modifier = Modifier.height(8.dp))
@@ -505,7 +490,7 @@ private fun SavingView() {
         text = "Saving to Ledger...",
         style = MaterialTheme.typography.titleMedium,
         fontWeight = FontWeight.Bold,
-        color = TextPrimary
+        color = colors.textPrimary
     )
     Spacer(modifier = Modifier.height(16.dp))
 }
@@ -515,12 +500,13 @@ private fun SuccessView(
     summary: CreditSuccessSummary?,
     onDone: () -> Unit
 ) {
+    val colors = PakkaTheme.colors
     Spacer(modifier = Modifier.height(8.dp))
 
     Icon(
         imageVector = Icons.Default.CheckCircle,
         contentDescription = "Success",
-        tint = SettledGreen,
+        tint = colors.settledGreen,
         modifier = Modifier.size(64.dp)
     )
 
@@ -528,17 +514,17 @@ private fun SuccessView(
         text = "Credit Added",
         style = MaterialTheme.typography.headlineMedium,
         fontWeight = FontWeight.ExtraBold,
-        color = TextPrimary
+        color = colors.textPrimary
     )
 
     if (summary != null) {
         Card(
             modifier = Modifier.fillMaxWidth(),
             colors = CardDefaults.cardColors(
-                containerColor = SurfaceDark
+                containerColor = colors.surface
             ),
             shape = RoundedCornerShape(18.dp),
-            border = androidx.compose.foundation.BorderStroke(1.dp, BorderSubtleDark)
+            border = androidx.compose.foundation.BorderStroke(1.dp, colors.borderSubtle)
         ) {
             Column(
                 modifier = Modifier
@@ -551,18 +537,18 @@ private fun SuccessView(
                     text = summary.customerName,
                     style = MaterialTheme.typography.titleLarge,
                     fontWeight = FontWeight.Bold,
-                    color = TextPrimary
+                    color = colors.textPrimary
                 )
                 Text(
                     text = "${summary.amount.formatRupees()} added",
                     style = MaterialTheme.typography.bodyMedium,
-                    color = TextSecondary
+                    color = colors.textSecondary
                 )
                 Text(
                     text = "${summary.totalOutstanding.formatRupees()} total outstanding",
                     style = MaterialTheme.typography.titleMedium,
                     fontWeight = FontWeight.SemiBold,
-                    color = IQOOLime
+                    color = colors.limePrimary
                 )
             }
         }
@@ -577,8 +563,8 @@ private fun SuccessView(
             .height(50.dp)
             .testTag("dismiss_success_button"),
         colors = ButtonDefaults.buttonColors(
-            containerColor = IQOOLime,
-            contentColor = IQOOOnLime
+            containerColor = colors.limePrimary,
+            contentColor = colors.onLimePrimary
         ),
         shape = RoundedCornerShape(16.dp)
     ) {
@@ -594,10 +580,11 @@ private fun ErrorView(
     onManual: () -> Unit,
     onCancel: () -> Unit
 ) {
+    val colors = PakkaTheme.colors
     Icon(
         imageVector = Icons.Default.ErrorOutline,
         contentDescription = "Error",
-        tint = OpenRed,
+        tint = colors.openRed,
         modifier = Modifier.size(56.dp)
     )
 
@@ -605,26 +592,26 @@ private fun ErrorView(
         text = "Voice Entry Issue",
         style = MaterialTheme.typography.titleLarge,
         fontWeight = FontWeight.Bold,
-        color = OpenRed
+        color = colors.openRed
     )
 
     Text(
         text = errorMessage,
         style = MaterialTheme.typography.bodyMedium,
-        color = TextSecondary,
+        color = colors.textSecondary,
         textAlign = TextAlign.Center
     )
 
     if (rawTranscript.isNotBlank() && rawTranscript != "Manual Entry") {
         Surface(
             shape = RoundedCornerShape(10.dp),
-            color = SurfaceDark,
-            border = androidx.compose.foundation.BorderStroke(1.dp, BorderSubtleDark)
+            color = colors.surface,
+            border = androidx.compose.foundation.BorderStroke(1.dp, colors.borderSubtle)
         ) {
             Text(
                 text = "Heard: \"$rawTranscript\"",
                 style = MaterialTheme.typography.bodySmall,
-                color = TextSecondary,
+                color = colors.textSecondary,
                 modifier = Modifier.padding(horizontal = 12.dp, vertical = 6.dp)
             )
         }
@@ -639,15 +626,15 @@ private fun ErrorView(
         Button(
             onClick = onRetry,
             colors = ButtonDefaults.buttonColors(
-                containerColor = IQOOLime,
-                contentColor = IQOOOnLime
+                containerColor = colors.limePrimary,
+                contentColor = colors.onLimePrimary
             ),
             shape = RoundedCornerShape(16.dp),
             modifier = Modifier
                 .fillMaxWidth()
                 .testTag("retry_voice_button")
         ) {
-            Icon(Icons.Default.Refresh, contentDescription = null, tint = IQOOOnLime, modifier = Modifier.size(18.dp))
+            Icon(Icons.Default.Refresh, contentDescription = null, tint = colors.onLimePrimary, modifier = Modifier.size(18.dp))
             Spacer(modifier = Modifier.width(8.dp))
             Text("Try Speaking Again", fontWeight = FontWeight.Bold)
         }
@@ -655,13 +642,13 @@ private fun ErrorView(
         OutlinedButton(
             onClick = onManual,
             shape = RoundedCornerShape(16.dp),
-            colors = ButtonDefaults.outlinedButtonColors(contentColor = TextPrimary),
-            border = androidx.compose.foundation.BorderStroke(1.dp, BorderMediumDark),
+            colors = ButtonDefaults.outlinedButtonColors(contentColor = colors.textPrimary),
+            border = androidx.compose.foundation.BorderStroke(1.dp, colors.borderMedium),
             modifier = Modifier
                 .fillMaxWidth()
                 .testTag("manual_fallback_button")
         ) {
-            Icon(Icons.Default.Keyboard, contentDescription = null, tint = IQOOLime, modifier = Modifier.size(18.dp))
+            Icon(Icons.Default.Keyboard, contentDescription = null, tint = colors.limePrimary, modifier = Modifier.size(18.dp))
             Spacer(modifier = Modifier.width(8.dp))
             Text("Enter Details Manually")
         }
@@ -673,7 +660,7 @@ private fun ErrorView(
                 .fillMaxWidth()
                 .testTag("cancel_error_button")
         ) {
-            Text("Cancel", color = TextSecondary)
+            Text("Cancel", color = colors.textSecondary)
         }
     }
 }
