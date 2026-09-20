@@ -26,17 +26,13 @@ import androidx.compose.material.icons.filled.Image
 import androidx.compose.material.icons.filled.Keyboard
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
-import androidx.compose.material3.Card
-import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
-import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -49,22 +45,10 @@ import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 import androidx.core.content.ContextCompat
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
-import com.example.ui.theme.BackgroundDark
-import com.example.ui.theme.BorderMediumDark
-import com.example.ui.theme.BorderSubtleDark
-import com.example.ui.theme.IQOOLime
-import com.example.ui.theme.IQOOLimeContainer
-import com.example.ui.theme.IQOOOnLime
-import com.example.ui.theme.SurfaceCardElevated
-import com.example.ui.theme.SurfaceDark
-import com.example.ui.theme.SurfaceHigherDark
-import com.example.ui.theme.TextPrimary
-import com.example.ui.theme.TextSecondary
-import com.example.ui.theme.TextTertiary
+import com.example.ui.theme.PakkaTheme
 
 @Composable
 fun PaymentEvidenceCaptureScreen(
@@ -100,17 +84,10 @@ fun PaymentEvidenceCaptureScreen(
         }
     }
 
-    LaunchedEffect(Unit) {
-        if (!hasCameraPermission) {
-            permissionLauncher.launch(Manifest.permission.CAMERA)
-        }
-    }
-
     Box(
         modifier = modifier
             .fillMaxSize()
-            .background(BackgroundDark)
-            .testTag("payment_capture_screen")
+            .testTag("payment_evidence_capture_screen")
     ) {
         when (uiState.phase) {
             CaptureUiPhase.CAMERA_PREVIEW -> {
@@ -129,9 +106,10 @@ fun PaymentEvidenceCaptureScreen(
                         outputFileProvider = { viewModel.getOutputMediaFile() }
                     )
                 } else {
-                    // Permission not granted fallback UI
                     CameraPermissionFallback(
-                        onRequestPermission = { permissionLauncher.launch(Manifest.permission.CAMERA) },
+                        onRequestPermission = {
+                            permissionLauncher.launch(Manifest.permission.CAMERA)
+                        },
                         onOpenGallery = {
                             photoPickerLauncher.launch(
                                 PickVisualMediaRequest(ActivityResultContracts.PickVisualMedia.ImageOnly)
@@ -192,10 +170,11 @@ fun PaymentEvidenceCaptureScreen(
 
 @Composable
 private fun ProcessingOcrOverlay(message: String) {
+    val colors = PakkaTheme.colors
     Box(
         modifier = Modifier
             .fillMaxSize()
-            .background(Color(0xEE070908))
+            .background(if (colors.isDark) Color(0xEE070908) else Color(0xEEF4F6F4))
             .testTag("ocr_processing_overlay"),
         contentAlignment = Alignment.Center
     ) {
@@ -204,7 +183,7 @@ private fun ProcessingOcrOverlay(message: String) {
             modifier = Modifier.padding(32.dp)
         ) {
             CircularProgressIndicator(
-                color = IQOOLime,
+                color = colors.limePrimary,
                 strokeWidth = 4.dp,
                 modifier = Modifier.size(56.dp)
             )
@@ -213,14 +192,14 @@ private fun ProcessingOcrOverlay(message: String) {
                 text = message,
                 style = MaterialTheme.typography.titleMedium,
                 fontWeight = FontWeight.Bold,
-                color = TextPrimary,
+                color = colors.textPrimary,
                 textAlign = TextAlign.Center
             )
             Spacer(modifier = Modifier.height(8.dp))
             Text(
                 text = "100% Offline On-Device OCR Engine",
                 style = MaterialTheme.typography.bodySmall,
-                color = TextSecondary
+                color = colors.textSecondary
             )
         }
     }
@@ -233,10 +212,12 @@ private fun CameraPermissionFallback(
     onManualEntry: () -> Unit,
     onNavigateBack: () -> Unit
 ) {
+    val colors = PakkaTheme.colors
+
     Box(
         modifier = Modifier
             .fillMaxSize()
-            .background(BackgroundDark)
+            .background(colors.background)
             .padding(24.dp)
             .testTag("camera_permission_fallback")
     ) {
@@ -247,7 +228,7 @@ private fun CameraPermissionFallback(
             Icon(
                 imageVector = Icons.AutoMirrored.Filled.ArrowBack,
                 contentDescription = "Back",
-                tint = TextPrimary
+                tint = colors.textPrimary
             )
         }
 
@@ -260,14 +241,14 @@ private fun CameraPermissionFallback(
             Box(
                 modifier = Modifier
                     .size(80.dp)
-                    .background(SurfaceHigherDark, CircleShape)
-                    .border(1.dp, BorderMediumDark, CircleShape),
+                    .background(colors.surfaceElevated, CircleShape)
+                    .border(1.dp, colors.borderMedium, CircleShape),
                 contentAlignment = Alignment.Center
             ) {
                 Icon(
                     imageVector = Icons.Default.CameraAlt,
                     contentDescription = null,
-                    tint = IQOOLime,
+                    tint = colors.limePrimary,
                     modifier = Modifier.size(38.dp)
                 )
             }
@@ -279,7 +260,7 @@ private fun CameraPermissionFallback(
                 style = MaterialTheme.typography.headlineSmall,
                 fontWeight = FontWeight.Bold,
                 textAlign = TextAlign.Center,
-                color = TextPrimary
+                color = colors.textPrimary
             )
 
             Spacer(modifier = Modifier.height(8.dp))
@@ -288,7 +269,7 @@ private fun CameraPermissionFallback(
                 text = "To photograph payment confirmation screens, PakkaKhata requires camera access. You can also pick a screenshot from your gallery.",
                 style = MaterialTheme.typography.bodyMedium,
                 textAlign = TextAlign.Center,
-                color = TextSecondary
+                color = colors.textSecondary
             )
 
             Spacer(modifier = Modifier.height(28.dp))
@@ -296,8 +277,8 @@ private fun CameraPermissionFallback(
             Button(
                 onClick = onRequestPermission,
                 colors = ButtonDefaults.buttonColors(
-                    containerColor = IQOOLime,
-                    contentColor = IQOOOnLime
+                    containerColor = colors.limePrimary,
+                    contentColor = colors.onLimePrimary
                 ),
                 shape = RoundedCornerShape(16.dp),
                 modifier = Modifier
@@ -313,14 +294,14 @@ private fun CameraPermissionFallback(
             OutlinedButton(
                 onClick = onOpenGallery,
                 shape = RoundedCornerShape(16.dp),
-                colors = ButtonDefaults.outlinedButtonColors(contentColor = TextPrimary),
-                border = androidx.compose.foundation.BorderStroke(1.dp, BorderMediumDark),
+                colors = ButtonDefaults.outlinedButtonColors(contentColor = colors.textPrimary),
+                border = androidx.compose.foundation.BorderStroke(1.dp, colors.borderMedium),
                 modifier = Modifier
                     .fillMaxWidth()
                     .height(50.dp)
                     .testTag("fallback_choose_gallery_button")
             ) {
-                Icon(imageVector = Icons.Default.Image, contentDescription = null, tint = IQOOLime)
+                Icon(imageVector = Icons.Default.Image, contentDescription = null, tint = colors.limePrimary)
                 Spacer(modifier = Modifier.width(8.dp))
                 Text("Choose Screenshot from Gallery")
             }
@@ -330,14 +311,14 @@ private fun CameraPermissionFallback(
             OutlinedButton(
                 onClick = onManualEntry,
                 shape = RoundedCornerShape(16.dp),
-                colors = ButtonDefaults.outlinedButtonColors(contentColor = TextPrimary),
-                border = androidx.compose.foundation.BorderStroke(1.dp, BorderMediumDark),
+                colors = ButtonDefaults.outlinedButtonColors(contentColor = colors.textPrimary),
+                border = androidx.compose.foundation.BorderStroke(1.dp, colors.borderMedium),
                 modifier = Modifier
                     .fillMaxWidth()
                     .height(50.dp)
                     .testTag("fallback_manual_entry_button")
             ) {
-                Icon(imageVector = Icons.Default.Keyboard, contentDescription = null, tint = IQOOLime)
+                Icon(imageVector = Icons.Default.Keyboard, contentDescription = null, tint = colors.limePrimary)
                 Spacer(modifier = Modifier.width(8.dp))
                 Text("Enter Payment Details Manually")
             }
