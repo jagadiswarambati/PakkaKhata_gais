@@ -4,60 +4,101 @@ import android.Manifest
 import android.content.pm.PackageManager
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Add
+import androidx.compose.material.icons.automirrored.filled.ArrowForward
+import androidx.compose.material.icons.automirrored.filled.ReceiptLong
 import androidx.compose.material.icons.filled.CheckCircle
-import androidx.compose.material.icons.filled.MenuBook
+import androidx.compose.material.icons.filled.DoneAll
 import androidx.compose.material.icons.filled.Mic
-import androidx.compose.material.icons.filled.Person
+import androidx.compose.material.icons.filled.People
 import androidx.compose.material.icons.filled.PhotoCamera
-import androidx.compose.material.icons.filled.Receipt
-import androidx.compose.material.icons.filled.Storage
+import androidx.compose.material.icons.filled.Shield
+import androidx.compose.material3.Badge
+import androidx.compose.material3.BadgedBox
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
-import androidx.compose.material3.CenterAlignedTopAppBar
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.ExtendedFloatingActionButton
+import androidx.compose.material3.FilterChip
+import androidx.compose.material3.FilterChipDefaults
 import androidx.compose.material3.Icon
+import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
-import androidx.compose.material3.TopAppBarDefaults
+import androidx.compose.material3.ripple
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.StrokeCap
+import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import androidx.core.content.ContextCompat
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.domain.model.ObligationStatus
-import com.example.ui.theme.EmeraldPrimary
-import com.example.ui.theme.GoldSecondary
+import com.example.domain.model.PaymentEvidence
+import com.example.presentation.util.DateTimeFormatter
+import com.example.ui.theme.BackgroundDark
+import com.example.ui.theme.BorderAccentDark
+import com.example.ui.theme.BorderMediumDark
+import com.example.ui.theme.BorderSubtleDark
+import com.example.ui.theme.IQOOLime
+import com.example.ui.theme.IQOOLimeContainer
+import com.example.ui.theme.IQOOOnLime
+import com.example.ui.theme.OpenRed
+import com.example.ui.theme.OpenRedContainer
+import com.example.ui.theme.OverpaidBlue
+import com.example.ui.theme.PartialAmber
+import com.example.ui.theme.PartialAmberContainer
+import com.example.ui.theme.SettledGreen
+import com.example.ui.theme.SettledGreenContainer
+import com.example.ui.theme.SurfaceCard
+import com.example.ui.theme.SurfaceCardElevated
+import com.example.ui.theme.SurfaceDark
+import com.example.ui.theme.SurfaceElevatedDark
+import com.example.ui.theme.SurfaceHigherDark
+import com.example.ui.theme.TextPrimary
+import com.example.ui.theme.TextSecondary
+import com.example.ui.theme.TextTertiary
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -65,6 +106,7 @@ fun HomeScreen(
     modifier: Modifier = Modifier,
     onNavigateToPaymentCapture: () -> Unit = {},
     onNavigateToMatchReview: (Long) -> Unit = {},
+    onNavigateToCustomerDetail: (Long) -> Unit = {},
     viewModel: HomeViewModel = viewModel()
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
@@ -93,297 +135,176 @@ fun HomeScreen(
         }
     }
 
+    val hasLedgerData = uiState.customerCount > 0 || uiState.openObligationsCount > 0 || uiState.recentLedgerItems.isNotEmpty()
+
     Scaffold(
         modifier = modifier
             .fillMaxSize()
             .testTag("home_screen"),
-        topBar = {
-            CenterAlignedTopAppBar(
-                title = {
-                    Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                        Text(
-                            text = "PakkaKhata",
-                            style = MaterialTheme.typography.titleLarge,
-                            fontWeight = FontWeight.Bold,
-                            color = MaterialTheme.colorScheme.onPrimary
-                        )
-                        Text(
-                            text = "The Ledger That Settles Itself",
-                            style = MaterialTheme.typography.labelSmall,
-                            color = MaterialTheme.colorScheme.onPrimary.copy(alpha = 0.85f)
-                        )
-                    }
-                },
-                colors = TopAppBarDefaults.centerAlignedTopAppBarColors(
-                    containerColor = MaterialTheme.colorScheme.primary
-                )
-            )
-        },
+        containerColor = BackgroundDark,
         floatingActionButton = {
-            ExtendedFloatingActionButton(
-                onClick = handleVoiceCreditClick,
-                icon = { Icon(Icons.Default.Mic, contentDescription = "Voice Credit Mic") },
-                text = { Text("+ Add Credit", fontWeight = FontWeight.Bold) },
-                containerColor = EmeraldPrimary,
-                contentColor = MaterialTheme.colorScheme.onPrimary,
-                modifier = Modifier.testTag("add_credit_fab")
-            )
+            if (hasLedgerData) {
+                ExtendedFloatingActionButton(
+                    onClick = handleVoiceCreditClick,
+                    icon = {
+                        Icon(
+                            imageVector = Icons.Default.Mic,
+                            contentDescription = "Voice Credit Mic",
+                            tint = IQOOOnLime,
+                            modifier = Modifier.size(20.dp)
+                        )
+                    },
+                    text = {
+                        Text(
+                            text = "Give Credit",
+                            fontWeight = FontWeight.Bold,
+                            fontSize = 14.sp,
+                            color = IQOOOnLime,
+                            letterSpacing = 0.2.sp
+                        )
+                    },
+                    containerColor = IQOOLime,
+                    contentColor = IQOOOnLime,
+                    shape = RoundedCornerShape(18.dp),
+                    elevation = androidx.compose.material3.FloatingActionButtonDefaults.elevation(
+                        defaultElevation = 6.dp,
+                        pressedElevation = 2.dp
+                    ),
+                    modifier = Modifier
+                        .navigationBarsPadding()
+                        .padding(bottom = 8.dp)
+                        .testTag("add_credit_fab")
+                )
+            }
         }
     ) { innerPadding ->
+        val bottomPadding = if (hasLedgerData) 88.dp else 24.dp
         LazyColumn(
             modifier = Modifier
                 .fillMaxSize()
-                .padding(innerPadding)
-                .padding(16.dp),
+                .padding(innerPadding),
+            contentPadding = PaddingValues(start = 16.dp, end = 16.dp, top = 8.dp, bottom = bottomPadding),
             verticalArrangement = Arrangement.spacedBy(16.dp)
         ) {
-            // Prominent Voice Credit Action Card
+            // 1. Compact Native iQOO Header
             item {
-                Card(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .testTag("voice_credit_prompt_card"),
-                    colors = CardDefaults.cardColors(
-                        containerColor = EmeraldPrimary.copy(alpha = 0.12f)
-                    ),
-                    shape = RoundedCornerShape(16.dp)
-                ) {
-                    Row(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(16.dp),
-                        verticalAlignment = Alignment.CenterVertically,
-                        horizontalArrangement = Arrangement.SpaceBetween
-                    ) {
-                        Column(modifier = Modifier.weight(1f)) {
-                            Text(
-                                text = "Voice Credit Entry",
-                                style = MaterialTheme.typography.titleMedium,
-                                fontWeight = FontWeight.Bold,
-                                color = MaterialTheme.colorScheme.onSurface
-                            )
-                            Text(
-                                text = "Tap mic and speak: \"Ramesh 500 udhar\"",
-                                style = MaterialTheme.typography.bodySmall,
-                                color = MaterialTheme.colorScheme.onSurfaceVariant
-                            )
+                IQOONativeHeader()
+            }
+
+            // 2. Hero Financial Snapshot (Elevated Balance Card)
+            item {
+                IQOOHeroBalanceCard(uiState = uiState)
+            }
+
+            // 3. Compact Quick Stats Grid
+            item {
+                IQOOQuickStatsGrid(uiState = uiState)
+            }
+
+            // 4. Primary Quick Actions (Active Ledger only: Give Credit + Record Payment)
+            if (hasLedgerData) {
+                item {
+                    IQOOPrimaryActionsSection(
+                        pendingReviewCount = uiState.unreconciledEvidences.size,
+                        onGiveCreditClick = handleVoiceCreditClick,
+                        onRecordPaymentClick = onNavigateToPaymentCapture,
+                        onReviewPaymentsClick = {
+                            if (uiState.unreconciledEvidences.isNotEmpty()) {
+                                onNavigateToMatchReview(uiState.unreconciledEvidences.first().id)
+                            }
                         }
-                        Button(
-                            onClick = handleVoiceCreditClick,
-                            colors = ButtonDefaults.buttonColors(containerColor = EmeraldPrimary),
-                            shape = RoundedCornerShape(12.dp),
-                            modifier = Modifier.testTag("speak_credit_button")
-                        ) {
-                            Icon(Icons.Default.Mic, contentDescription = null, modifier = Modifier.size(18.dp))
-                            Spacer(modifier = Modifier.width(6.dp))
-                            Text("Speak")
-                        }
-                    }
+                    )
                 }
             }
 
-            // Payment Evidence Capture Action Card
-            item {
-                Card(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .testTag("payment_evidence_prompt_card"),
-                    colors = CardDefaults.cardColors(
-                        containerColor = GoldSecondary.copy(alpha = 0.12f)
-                    ),
-                    shape = RoundedCornerShape(16.dp)
-                ) {
-                    Row(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(16.dp),
-                        verticalAlignment = Alignment.CenterVertically,
-                        horizontalArrangement = Arrangement.SpaceBetween
-                    ) {
-                        Column(modifier = Modifier.weight(1f)) {
-                            Text(
-                                text = "Capture Payment Evidence",
-                                style = MaterialTheme.typography.titleMedium,
-                                fontWeight = FontWeight.Bold,
-                                color = MaterialTheme.colorScheme.onSurface
-                            )
-                            Text(
-                                text = "Photograph confirmation or upload UPI screenshot (On-device OCR)",
-                                style = MaterialTheme.typography.bodySmall,
-                                color = MaterialTheme.colorScheme.onSurfaceVariant
-                            )
-                        }
-                        Button(
-                            onClick = onNavigateToPaymentCapture,
-                            colors = ButtonDefaults.buttonColors(containerColor = GoldSecondary),
-                            shape = RoundedCornerShape(12.dp),
-                            modifier = Modifier.testTag("scan_evidence_button")
-                        ) {
-                            Icon(Icons.Default.PhotoCamera, contentDescription = null, tint = Color.Black, modifier = Modifier.size(18.dp))
-                            Spacer(modifier = Modifier.width(6.dp))
-                            Text("Scan", color = Color.Black, fontWeight = FontWeight.Bold)
-                        }
-                    }
-                }
-            }
-
-            // Ledger Metrics Overview
-            item {
-                Card(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .testTag("ledger_metrics_card"),
-                    colors = CardDefaults.cardColors(
-                        containerColor = MaterialTheme.colorScheme.surface
-                    ),
-                    shape = RoundedCornerShape(16.dp),
-                    elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
-                ) {
-                    Column(
-                        modifier = Modifier.padding(20.dp),
-                        verticalArrangement = Arrangement.spacedBy(16.dp)
-                    ) {
-                        Text(
-                            text = "Ledger Overview",
-                            style = MaterialTheme.typography.titleMedium,
-                            fontWeight = FontWeight.SemiBold
-                        )
-
-                        Row(
-                            modifier = Modifier.fillMaxWidth(),
-                            horizontalArrangement = Arrangement.SpaceBetween
-                        ) {
-                            MetricItem(
-                                label = "Customers",
-                                value = "${uiState.customerCount}"
-                            )
-                            MetricItem(
-                                label = "Open Credit",
-                                value = "${uiState.openObligationsCount}"
-                            )
-                            MetricItem(
-                                label = "Evidence Saved",
-                                value = "${uiState.paymentEvidenceCount}"
-                            )
-                            MetricItem(
-                                label = "Outstanding",
-                                value = uiState.totalOutstanding.formatRupees()
-                            )
-                        }
-                    }
-                }
-            }
-
-            // Unreconciled Payments Banner (if any pending)
+            // 5. Pending Payments Requiring Review Banner (if any)
             if (uiState.unreconciledEvidences.isNotEmpty()) {
                 item {
-                    Card(
-                        shape = RoundedCornerShape(16.dp),
-                        colors = CardDefaults.cardColors(
-                            containerColor = GoldSecondary.copy(alpha = 0.12f)
-                        ),
-                        border = CardDefaults.outlinedCardBorder().copy(
-                            brush = androidx.compose.ui.graphics.SolidColor(GoldSecondary.copy(alpha = 0.5f))
-                        ),
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .testTag("unreconciled_payments_banner")
+                    IQOOPendingPaymentsSection(
+                        pendingEvidences = uiState.unreconciledEvidences,
+                        onReviewEvidence = onNavigateToMatchReview
+                    )
+                }
+            }
+
+            // 6. Customer Ledger Section Header & Filter Pills
+            item {
+                Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        verticalAlignment = Alignment.CenterVertically
                     ) {
-                        Column(modifier = Modifier.padding(16.dp)) {
-                            Row(
-                                modifier = Modifier.fillMaxWidth(),
-                                horizontalArrangement = Arrangement.SpaceBetween,
-                                verticalAlignment = Alignment.CenterVertically
-                            ) {
-                                Text(
-                                    text = "Payments Pending Settlement (${uiState.unreconciledEvidences.size})",
-                                    style = MaterialTheme.typography.titleSmall,
-                                    fontWeight = FontWeight.Bold,
-                                    color = GoldSecondary
-                                )
-                            }
-                            Spacer(modifier = Modifier.height(10.dp))
-                            uiState.unreconciledEvidences.take(3).forEach { evidence ->
-                                Row(
-                                    modifier = Modifier
-                                        .fillMaxWidth()
-                                        .padding(vertical = 4.dp),
-                                    horizontalArrangement = Arrangement.SpaceBetween,
-                                    verticalAlignment = Alignment.CenterVertically
-                                ) {
-                                    Column(modifier = Modifier.weight(1f)) {
-                                        Text(
-                                            text = evidence.extractedAmount.formatRupees(),
-                                            style = MaterialTheme.typography.titleMedium,
-                                            fontWeight = FontWeight.ExtraBold,
-                                            color = EmeraldPrimary
-                                        )
-                                        Text(
-                                            text = "From: ${evidence.extractedSenderName ?: "Unknown Payer"}",
-                                            style = MaterialTheme.typography.bodySmall,
-                                            color = MaterialTheme.colorScheme.onSurfaceVariant
-                                        )
-                                    }
-                                    Button(
-                                        onClick = { onNavigateToMatchReview(evidence.id) },
-                                        colors = ButtonDefaults.buttonColors(containerColor = EmeraldPrimary),
-                                        shape = RoundedCornerShape(8.dp),
-                                        modifier = Modifier.testTag("reconcile_evidence_${evidence.id}")
-                                    ) {
-                                        Text("Reconcile")
-                                    }
-                                }
-                            }
+                        Text(
+                            text = "Customer Ledger",
+                            style = MaterialTheme.typography.titleMedium,
+                            fontWeight = FontWeight.Bold,
+                            color = TextPrimary,
+                            letterSpacing = 0.2.sp
+                        )
+                        if (hasLedgerData) {
+                            Text(
+                                text = "${uiState.recentLedgerItems.size} accounts",
+                                style = MaterialTheme.typography.labelMedium,
+                                color = TextSecondary
+                            )
+                        }
+                    }
+
+                    if (hasLedgerData) {
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.spacedBy(8.dp)
+                        ) {
+                            IQOORoundedFilterChip(
+                                selected = uiState.activeFilter == LedgerFilter.ALL,
+                                onClick = { viewModel.setLedgerFilter(LedgerFilter.ALL) },
+                                label = "All (${uiState.customerCount})",
+                                modifier = Modifier.testTag("filter_chip_all")
+                            )
+                            IQOORoundedFilterChip(
+                                selected = uiState.activeFilter == LedgerFilter.ACTIVE_DUES,
+                                onClick = { viewModel.setLedgerFilter(LedgerFilter.ACTIVE_DUES) },
+                                label = "Active Dues (${uiState.customersWithOutstandingCount})",
+                                highlightColor = if (uiState.customersWithOutstandingCount > 0) OpenRed else null,
+                                modifier = Modifier.testTag("filter_chip_active_dues")
+                            )
+                            IQOORoundedFilterChip(
+                                selected = uiState.activeFilter == LedgerFilter.SETTLED,
+                                onClick = { viewModel.setLedgerFilter(LedgerFilter.SETTLED) },
+                                label = "Settled",
+                                highlightColor = SettledGreen,
+                                modifier = Modifier.testTag("filter_chip_settled")
+                            )
                         }
                     }
                 }
             }
 
-            // Recent Credit Obligations Header
-            item {
-                Text(
-                    text = "Recent Credit Obligations",
-                    style = MaterialTheme.typography.titleMedium,
-                    fontWeight = FontWeight.Bold,
-                    modifier = Modifier.padding(top = 8.dp)
-                )
-            }
-
+            // 7. Ledger Obligations List or Empty State
             if (uiState.recentLedgerItems.isEmpty()) {
                 item {
-                    Surface(
-                        modifier = Modifier.fillMaxWidth(),
-                        shape = RoundedCornerShape(12.dp),
-                        color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f)
-                    ) {
-                        Text(
-                            text = "No credit obligations yet. Tap \"+ Add Credit\" or the microphone above to speak your first credit entry.",
-                            style = MaterialTheme.typography.bodyMedium,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant,
-                            modifier = Modifier.padding(16.dp)
-                        )
-                    }
+                    IQOOEmptyLedgerCard(
+                        activeFilter = uiState.activeFilter,
+                        showGiveFirstCredit = !hasLedgerData,
+                        onGiveCreditClick = handleVoiceCreditClick
+                    )
                 }
             } else {
                 items(uiState.recentLedgerItems, key = { it.obligation.id }) { item ->
-                    LedgerObligationCard(item)
+                    IQOOLedgerObligationCard(
+                        item = item,
+                        onClick = { onNavigateToCustomerDetail(item.customerId) }
+                    )
                 }
             }
 
-            // Phase Progress Indicator
-            item {
-                Surface(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(bottom = 72.dp),
-                    shape = RoundedCornerShape(12.dp),
-                    color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.4f)
-                ) {
-                    Text(
-                        text = "Phases Active: Foundation • Reconciliation Engine • Voice Credit • Payment Evidence & On-Device OCR",
-                        style = MaterialTheme.typography.bodySmall,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.8f),
-                        modifier = Modifier.padding(12.dp)
+            // 8. Recently Settled Payments (Reconciliation Audit Trail)
+            if (uiState.recentSettlements.isNotEmpty()) {
+                item {
+                    IQOORecentSettlementsSection(
+                        recentSettlements = uiState.recentSettlements,
+                        onCustomerClick = onNavigateToCustomerDetail
                     )
                 }
             }
@@ -404,26 +325,677 @@ fun HomeScreen(
     )
 }
 
+/**
+ * Compact, dark system header inspired by iQOO/OriginOS system utilities.
+ */
 @Composable
-private fun LedgerObligationCard(item: LedgerItemUiModel) {
-    val receivedPaise = maxOf(0L, item.obligation.originalAmount.paise - item.obligation.remainingAmount.paise)
-    val receivedMoney = com.example.domain.model.Money.fromPaise(receivedPaise)
+private fun IQOONativeHeader() {
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(top = 4.dp, bottom = 4.dp),
+        horizontalArrangement = Arrangement.SpaceBetween,
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        Column {
+            Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                Text(
+                    text = "PakkaKhata",
+                    style = MaterialTheme.typography.titleLarge,
+                    fontWeight = FontWeight.ExtraBold,
+                    color = TextPrimary,
+                    letterSpacing = (-0.5).sp
+                )
+                Box(
+                    modifier = Modifier
+                        .size(6.dp)
+                        .clip(CircleShape)
+                        .background(IQOOLime)
+                )
+            }
+            Text(
+                text = "The Ledger That Settles Itself",
+                style = MaterialTheme.typography.labelSmall,
+                color = TextSecondary,
+                letterSpacing = 0.2.sp
+            )
+        }
+
+        // On-device AI & Security Pill
+        Surface(
+            shape = RoundedCornerShape(14.dp),
+            color = SurfaceElevatedDark,
+            border = androidx.compose.foundation.BorderStroke(1.dp, BorderSubtleDark)
+        ) {
+            Row(
+                modifier = Modifier.padding(horizontal = 10.dp, vertical = 5.dp),
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.spacedBy(5.dp)
+            ) {
+                Icon(
+                    imageVector = Icons.Default.Shield,
+                    contentDescription = null,
+                    tint = IQOOLime,
+                    modifier = Modifier.size(12.dp)
+                )
+                Text(
+                    text = "Offline AI",
+                    style = MaterialTheme.typography.labelSmall,
+                    fontWeight = FontWeight.SemiBold,
+                    color = TextPrimary,
+                    fontSize = 11.sp
+                )
+            }
+        }
+    }
+}
+
+/**
+ * Hero Financial Snapshot (Elevated Balance Card)
+ * Visual centerpiece with structured hierarchy, depth, and positive states.
+ */
+@Composable
+private fun IQOOHeroBalanceCard(uiState: HomeUiState) {
+    val isDue = uiState.totalOutstanding.isPositive
 
     Card(
         modifier = Modifier
             .fillMaxWidth()
-            .testTag("obligation_item_${item.obligation.id}"),
+            .testTag("ledger_metrics_card"),
         colors = CardDefaults.cardColors(
-            containerColor = MaterialTheme.colorScheme.surface
+            containerColor = SurfaceCardElevated
         ),
-        shape = RoundedCornerShape(12.dp),
-        elevation = CardDefaults.cardElevation(defaultElevation = 1.dp)
+        shape = RoundedCornerShape(24.dp),
+        border = androidx.compose.foundation.BorderStroke(
+            width = 1.dp,
+            brush = Brush.verticalGradient(
+                colors = listOf(
+                    if (isDue) BorderAccentDark else BorderMediumDark,
+                    BorderSubtleDark
+                )
+            )
+        ),
+        elevation = CardDefaults.cardElevation(defaultElevation = 0.dp)
+    ) {
+        Column(
+            modifier = Modifier.padding(20.dp),
+            verticalArrangement = Arrangement.spacedBy(12.dp)
+        ) {
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Text(
+                    text = "TOTAL OUTSTANDING",
+                    style = MaterialTheme.typography.labelSmall,
+                    fontWeight = FontWeight.Bold,
+                    color = TextSecondary,
+                    letterSpacing = 1.2.sp
+                )
+                Surface(
+                    shape = RoundedCornerShape(8.dp),
+                    color = if (isDue) OpenRedContainer else SettledGreenContainer
+                ) {
+                    Text(
+                        text = if (isDue) "${uiState.customersWithOutstandingCount} DUES PENDING" else "ALL CLEAR",
+                        style = MaterialTheme.typography.labelSmall,
+                        fontWeight = FontWeight.Bold,
+                        color = if (isDue) OpenRed else SettledGreen,
+                        modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp),
+                        fontSize = 11.sp
+                    )
+                }
+            }
+
+            // Big Amount Display
+            Column {
+                Text(
+                    text = uiState.totalOutstanding.formatRupees(),
+                    style = MaterialTheme.typography.headlineLarge,
+                    fontWeight = FontWeight.ExtraBold,
+                    color = if (isDue) TextPrimary else SettledGreen,
+                    letterSpacing = (-1).sp,
+                    fontSize = 36.sp
+                )
+                Spacer(modifier = Modifier.height(2.dp))
+                Text(
+                    text = if (isDue) {
+                        "Across ${uiState.customersWithOutstandingCount} customers with active credit"
+                    } else {
+                        "All customer accounts settled • Ledger balanced"
+                    },
+                    style = MaterialTheme.typography.bodySmall,
+                    color = TextSecondary
+                )
+            }
+
+            // Settlement progress indicator
+            val totalCreditPaise = maxOf(
+                1L,
+                uiState.totalOutstanding.paise + uiState.totalSettledAmount.paise
+            )
+            val progressFraction = if (totalCreditPaise > 0) {
+                (uiState.totalSettledAmount.paise.toFloat() / totalCreditPaise.toFloat()).coerceIn(0f, 1f)
+            } else 1f
+
+            Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
+                LinearProgressIndicator(
+                    progress = { progressFraction },
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(6.dp)
+                        .clip(RoundedCornerShape(3.dp)),
+                    color = SettledGreen,
+                    trackColor = SurfaceDark,
+                    strokeCap = StrokeCap.Round
+                )
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceBetween
+                ) {
+                    Text(
+                        text = "Settled ${uiState.totalSettledAmount.formatRupees()}",
+                        style = MaterialTheme.typography.labelSmall,
+                        color = SettledGreen,
+                        fontWeight = FontWeight.SemiBold
+                    )
+                    Text(
+                        text = "${(progressFraction * 100).toInt()}% recovered",
+                        style = MaterialTheme.typography.labelSmall,
+                        color = TextTertiary
+                    )
+                }
+            }
+        }
+    }
+}
+
+/**
+ * Compact 4-column quick stats system.
+ */
+@Composable
+private fun IQOOQuickStatsGrid(uiState: HomeUiState) {
+    Row(
+        modifier = Modifier.fillMaxWidth(),
+        horizontalArrangement = Arrangement.spacedBy(8.dp)
+    ) {
+        IQOOStatTile(
+            modifier = Modifier.weight(1f),
+            icon = Icons.Default.People,
+            value = "${uiState.customerCount}",
+            label = "Customers",
+            tint = TextPrimary
+        )
+        IQOOStatTile(
+            modifier = Modifier.weight(1f),
+            icon = Icons.AutoMirrored.Filled.ReceiptLong,
+            value = "${uiState.openObligationsCount}",
+            label = "Active",
+            tint = if (uiState.openObligationsCount > 0) OpenRed else TextPrimary
+        )
+        IQOOStatTile(
+            modifier = Modifier.weight(1f),
+            icon = Icons.Default.DoneAll,
+            value = "${uiState.unreconciledEvidences.size}",
+            label = "Review",
+            tint = if (uiState.unreconciledEvidences.isNotEmpty()) PartialAmber else TextSecondary,
+            highlight = uiState.unreconciledEvidences.isNotEmpty()
+        )
+        IQOOStatTile(
+            modifier = Modifier.weight(1f),
+            icon = Icons.Default.CheckCircle,
+            value = "${uiState.recentlySettledCount}",
+            label = "Settled",
+            tint = SettledGreen
+        )
+    }
+}
+
+@Composable
+private fun IQOOStatTile(
+    modifier: Modifier = Modifier,
+    icon: ImageVector,
+    value: String,
+    label: String,
+    tint: Color,
+    highlight: Boolean = false
+) {
+    Surface(
+        modifier = modifier,
+        shape = RoundedCornerShape(16.dp),
+        color = SurfaceCard,
+        border = androidx.compose.foundation.BorderStroke(
+            1.dp,
+            if (highlight) PartialAmber.copy(alpha = 0.5f) else BorderSubtleDark
+        )
+    ) {
+        Column(
+            modifier = Modifier.padding(horizontal = 8.dp, vertical = 12.dp),
+            horizontalAlignment = Alignment.CenterHorizontally,
+            verticalArrangement = Arrangement.Center
+        ) {
+            Icon(
+                imageVector = icon,
+                contentDescription = null,
+                tint = tint,
+                modifier = Modifier.size(16.dp)
+            )
+            Spacer(modifier = Modifier.height(4.dp))
+            Text(
+                text = value,
+                style = MaterialTheme.typography.titleMedium,
+                fontWeight = FontWeight.ExtraBold,
+                color = tint,
+                fontSize = 16.sp
+            )
+            Text(
+                text = label,
+                style = MaterialTheme.typography.labelSmall,
+                color = TextTertiary,
+                fontSize = 10.sp,
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis
+            )
+        }
+    }
+}
+
+/**
+ * Primary Actions (Dual Tactile Cards: Give Credit + Record Payment)
+ */
+@Composable
+private fun IQOOPrimaryActionsSection(
+    pendingReviewCount: Int,
+    onGiveCreditClick: () -> Unit,
+    onRecordPaymentClick: () -> Unit,
+    onReviewPaymentsClick: () -> Unit
+) {
+    Column(
+        modifier = Modifier
+            .fillMaxWidth()
+            .testTag("quick_actions_bar"),
+        verticalArrangement = Arrangement.spacedBy(8.dp)
+    ) {
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.spacedBy(10.dp)
+        ) {
+            // Give Credit Card (Primary Accent Treatment)
+            Surface(
+                onClick = onGiveCreditClick,
+                shape = RoundedCornerShape(20.dp),
+                color = IQOOLimeContainer,
+                border = androidx.compose.foundation.BorderStroke(1.dp, BorderAccentDark),
+                modifier = Modifier
+                    .weight(1f)
+                    .height(84.dp)
+                    .testTag("speak_credit_button")
+            ) {
+                Row(
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .padding(horizontal = 14.dp),
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(12.dp)
+                ) {
+                    Box(
+                        modifier = Modifier
+                            .size(44.dp)
+                            .clip(CircleShape)
+                            .background(IQOOLime),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Icon(
+                            imageVector = Icons.Default.Mic,
+                            contentDescription = null,
+                            tint = IQOOOnLime,
+                            modifier = Modifier.size(22.dp)
+                        )
+                    }
+                    Column(verticalArrangement = Arrangement.Center) {
+                        Text(
+                            text = "Give Credit",
+                            style = MaterialTheme.typography.titleSmall,
+                            fontWeight = FontWeight.Bold,
+                            color = TextPrimary
+                        )
+                        Text(
+                            text = "Say who took credit",
+                            style = MaterialTheme.typography.labelSmall,
+                            color = TextSecondary,
+                            fontSize = 11.sp
+                        )
+                    }
+                }
+            }
+
+            // Record Payment Card (Elevated Graphite Treatment)
+            Surface(
+                onClick = onRecordPaymentClick,
+                shape = RoundedCornerShape(20.dp),
+                color = SurfaceCardElevated,
+                border = androidx.compose.foundation.BorderStroke(1.dp, BorderMediumDark),
+                modifier = Modifier
+                    .weight(1f)
+                    .height(84.dp)
+                    .testTag("scan_evidence_button")
+            ) {
+                Row(
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .padding(horizontal = 14.dp),
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(12.dp)
+                ) {
+                    Box(
+                        modifier = Modifier
+                            .size(44.dp)
+                            .clip(CircleShape)
+                            .background(SurfaceHigherDark),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Icon(
+                            imageVector = Icons.Default.PhotoCamera,
+                            contentDescription = null,
+                            tint = PartialAmber,
+                            modifier = Modifier.size(22.dp)
+                        )
+                    }
+                    Column(verticalArrangement = Arrangement.Center) {
+                        Text(
+                            text = "Record Pay",
+                            style = MaterialTheme.typography.titleSmall,
+                            fontWeight = FontWeight.Bold,
+                            color = TextPrimary
+                        )
+                        Text(
+                            text = "Scan payment proof",
+                            style = MaterialTheme.typography.labelSmall,
+                            color = TextSecondary,
+                            fontSize = 11.sp
+                        )
+                    }
+                }
+            }
+        }
+
+        // Quick shortcut to pending reviews if present
+        if (pendingReviewCount > 0) {
+            Surface(
+                onClick = onReviewPaymentsClick,
+                shape = RoundedCornerShape(14.dp),
+                color = PartialAmberContainer,
+                border = androidx.compose.foundation.BorderStroke(1.dp, PartialAmber.copy(alpha = 0.4f)),
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .testTag("review_payments_action_button")
+            ) {
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(horizontal = 14.dp, vertical = 10.dp),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.spacedBy(8.dp)
+                    ) {
+                        Box(
+                            modifier = Modifier
+                                .size(8.dp)
+                                .clip(CircleShape)
+                                .background(PartialAmber)
+                        )
+                        Text(
+                            text = "$pendingReviewCount payment(s) waiting for your confirmation",
+                            style = MaterialTheme.typography.bodySmall,
+                            fontWeight = FontWeight.SemiBold,
+                            color = PartialAmber
+                        )
+                    }
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.spacedBy(4.dp)
+                    ) {
+                        Text(
+                            text = "Review",
+                            style = MaterialTheme.typography.labelSmall,
+                            fontWeight = FontWeight.Bold,
+                            color = PartialAmber
+                        )
+                        Icon(
+                            imageVector = Icons.AutoMirrored.Filled.ArrowForward,
+                            contentDescription = null,
+                            tint = PartialAmber,
+                            modifier = Modifier.size(14.dp)
+                        )
+                    }
+                }
+            }
+        }
+    }
+}
+
+/**
+ * Prominent card when payment evidence is waiting for review.
+ */
+@Composable
+private fun IQOOPendingPaymentsSection(
+    pendingEvidences: List<PaymentEvidence>,
+    onReviewEvidence: (Long) -> Unit
+) {
+    Card(
+        shape = RoundedCornerShape(20.dp),
+        colors = CardDefaults.cardColors(containerColor = SurfaceCardElevated),
+        border = androidx.compose.foundation.BorderStroke(1.dp, PartialAmber.copy(alpha = 0.4f)),
+        modifier = Modifier
+            .fillMaxWidth()
+            .testTag("unreconciled_payments_banner")
+    ) {
+        Column(modifier = Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                    Box(
+                        modifier = Modifier
+                            .size(8.dp)
+                            .clip(CircleShape)
+                            .background(PartialAmber)
+                    )
+                    Text(
+                        text = "PAYMENT TO REVIEW",
+                        style = MaterialTheme.typography.labelSmall,
+                        fontWeight = FontWeight.Bold,
+                        color = PartialAmber,
+                        letterSpacing = 1.sp
+                    )
+                }
+                Surface(
+                    shape = RoundedCornerShape(8.dp),
+                    color = SurfaceHigherDark
+                ) {
+                    Text(
+                        text = "${pendingEvidences.size} PENDING",
+                        style = MaterialTheme.typography.labelSmall,
+                        fontWeight = FontWeight.Bold,
+                        color = TextSecondary,
+                        modifier = Modifier.padding(horizontal = 8.dp, vertical = 2.dp),
+                        fontSize = 10.sp
+                    )
+                }
+            }
+
+            pendingEvidences.take(3).forEach { evidence ->
+                val appName = evidence.paymentApp ?: "UPI"
+                val timeFormatted = DateTimeFormatter.formatRelativeTime(evidence.timestamp)
+
+                Surface(
+                    shape = RoundedCornerShape(14.dp),
+                    color = SurfaceDark,
+                    border = androidx.compose.foundation.BorderStroke(1.dp, BorderSubtleDark),
+                    modifier = Modifier.fillMaxWidth()
+                ) {
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(14.dp),
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Column(modifier = Modifier.weight(1f)) {
+                            Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+                                Text(
+                                    text = evidence.extractedAmount.formatRupees(),
+                                    style = MaterialTheme.typography.titleLarge,
+                                    fontWeight = FontWeight.ExtraBold,
+                                    color = IQOOLime
+                                )
+                                Surface(
+                                    shape = RoundedCornerShape(6.dp),
+                                    color = SurfaceHigherDark
+                                ) {
+                                    Text(
+                                        text = appName,
+                                        style = MaterialTheme.typography.labelSmall,
+                                        fontWeight = FontWeight.Bold,
+                                        color = TextSecondary,
+                                        modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp),
+                                        fontSize = 10.sp
+                                    )
+                                }
+                            }
+                            Spacer(modifier = Modifier.height(2.dp))
+                            Text(
+                                text = "From: ${evidence.extractedSenderName ?: "Customer"}",
+                                style = MaterialTheme.typography.bodySmall,
+                                fontWeight = FontWeight.SemiBold,
+                                color = TextPrimary
+                            )
+                            if (!evidence.utrNumber.isNullOrBlank()) {
+                                Text(
+                                    text = "UTR: ${evidence.utrNumber} • $timeFormatted",
+                                    style = MaterialTheme.typography.labelSmall,
+                                    color = TextTertiary,
+                                    fontSize = 11.sp
+                                )
+                            }
+                        }
+
+                        Button(
+                            onClick = { onReviewEvidence(evidence.id) },
+                            colors = ButtonDefaults.buttonColors(
+                                containerColor = IQOOLime,
+                                contentColor = IQOOOnLime
+                            ),
+                            shape = RoundedCornerShape(12.dp),
+                            contentPadding = PaddingValues(horizontal = 14.dp, vertical = 8.dp),
+                            modifier = Modifier.testTag("reconcile_evidence_${evidence.id}")
+                        ) {
+                            Text("Review Match →", fontWeight = FontWeight.Bold, fontSize = 12.sp)
+                        }
+                    }
+                }
+            }
+        }
+    }
+}
+
+/**
+ * Filter Chip styled as a refined iQOO pill.
+ */
+@Composable
+private fun IQOORoundedFilterChip(
+    selected: Boolean,
+    onClick: () -> Unit,
+    label: String,
+    highlightColor: Color? = null,
+    modifier: Modifier = Modifier
+) {
+    Surface(
+        onClick = onClick,
+        shape = RoundedCornerShape(16.dp),
+        color = when {
+            selected -> SurfaceHigherDark
+            else -> SurfaceCard
+        },
+        border = androidx.compose.foundation.BorderStroke(
+            1.dp,
+            when {
+                selected && highlightColor != null -> highlightColor.copy(alpha = 0.6f)
+                selected -> BorderAccentDark
+                else -> BorderSubtleDark
+            }
+        ),
+        modifier = modifier
+    ) {
+        Row(
+            modifier = Modifier.padding(horizontal = 14.dp, vertical = 8.dp),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.spacedBy(6.dp)
+        ) {
+            if (selected) {
+                Box(
+                    modifier = Modifier
+                        .size(6.dp)
+                        .clip(CircleShape)
+                        .background(highlightColor ?: IQOOLime)
+                )
+            }
+            Text(
+                text = label,
+                style = MaterialTheme.typography.labelSmall,
+                fontWeight = if (selected) FontWeight.Bold else FontWeight.Medium,
+                color = when {
+                    selected && highlightColor != null -> highlightColor
+                    selected -> IQOOLime
+                    else -> TextSecondary
+                }
+            )
+        }
+    }
+}
+
+/**
+ * Customer Ledger row item card.
+ */
+@Composable
+private fun IQOOLedgerObligationCard(
+    item: LedgerItemUiModel,
+    onClick: () -> Unit
+) {
+    val receivedPaise = maxOf(0L, item.obligation.originalAmount.paise - item.obligation.remainingAmount.paise)
+    val receivedMoney = com.example.domain.model.Money.fromPaise(receivedPaise)
+    val formattedDate = DateTimeFormatter.formatRelativeTime(item.obligation.createdAt)
+
+    val progressFraction = if (item.obligation.originalAmount.paise > 0) {
+        (receivedPaise.toFloat() / item.obligation.originalAmount.paise.toFloat()).coerceIn(0f, 1f)
+    } else 1f
+
+    Card(
+        modifier = Modifier
+            .fillMaxWidth()
+            .testTag("obligation_item_${item.obligation.id}")
+            .clickable(
+                interactionSource = remember { MutableInteractionSource() },
+                indication = ripple(color = IQOOLime.copy(alpha = 0.2f)),
+                onClick = onClick
+            ),
+        colors = CardDefaults.cardColors(containerColor = SurfaceCardElevated),
+        shape = RoundedCornerShape(20.dp),
+        border = androidx.compose.foundation.BorderStroke(1.dp, BorderSubtleDark)
     ) {
         Column(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(16.dp)
+                .padding(16.dp),
+            verticalArrangement = Arrangement.spacedBy(10.dp)
         ) {
+            // Customer Row Header
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 verticalAlignment = Alignment.CenterVertically,
@@ -433,49 +1005,45 @@ private fun LedgerObligationCard(item: LedgerItemUiModel) {
                     verticalAlignment = Alignment.CenterVertically,
                     horizontalArrangement = Arrangement.spacedBy(12.dp)
                 ) {
+                    // Customer Avatar Squircle
                     Box(
                         modifier = Modifier
-                            .size(40.dp)
-                            .clip(CircleShape)
-                            .background(EmeraldPrimary.copy(alpha = 0.12f)),
+                            .size(42.dp)
+                            .clip(RoundedCornerShape(12.dp))
+                            .background(SurfaceHigherDark),
                         contentAlignment = Alignment.Center
                     ) {
-                        Icon(
-                            imageVector = Icons.Default.Person,
-                            contentDescription = null,
-                            tint = EmeraldPrimary,
-                            modifier = Modifier.size(22.dp)
+                        Text(
+                            text = item.customerName.take(1).uppercase(),
+                            style = MaterialTheme.typography.titleMedium,
+                            fontWeight = FontWeight.ExtraBold,
+                            color = IQOOLime
                         )
                     }
                     Column {
                         Text(
                             text = item.customerName,
-                            style = MaterialTheme.typography.titleMedium,
-                            fontWeight = FontWeight.Bold
+                            style = MaterialTheme.typography.titleSmall,
+                            fontWeight = FontWeight.Bold,
+                            color = TextPrimary
                         )
-                        if (!item.obligation.notes.isNullOrBlank()) {
-                            Text(
-                                text = item.obligation.notes,
-                                style = MaterialTheme.typography.bodySmall,
-                                color = MaterialTheme.colorScheme.onSurfaceVariant
-                            )
-                        } else if (!item.obligation.voiceTranscript.isNullOrBlank()) {
-                            Text(
-                                text = "\"${item.obligation.voiceTranscript}\"",
-                                style = MaterialTheme.typography.labelSmall,
-                                color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.7f)
-                            )
-                        }
+                        Text(
+                            text = formattedDate,
+                            style = MaterialTheme.typography.labelSmall,
+                            color = TextTertiary,
+                            fontSize = 11.sp
+                        )
                     }
                 }
 
+                // Status Badge
                 Surface(
                     shape = RoundedCornerShape(8.dp),
                     color = when (item.obligation.status) {
-                        ObligationStatus.OPEN -> EmeraldPrimary.copy(alpha = 0.12f)
-                        ObligationStatus.PARTIALLY_SETTLED -> GoldSecondary.copy(alpha = 0.18f)
-                        ObligationStatus.FULLY_SETTLED -> MaterialTheme.colorScheme.outline.copy(alpha = 0.12f)
-                        ObligationStatus.OVERPAID -> MaterialTheme.colorScheme.tertiary.copy(alpha = 0.12f)
+                        ObligationStatus.OPEN -> OpenRedContainer
+                        ObligationStatus.PARTIALLY_SETTLED -> PartialAmberContainer
+                        ObligationStatus.FULLY_SETTLED -> SettledGreenContainer
+                        ObligationStatus.OVERPAID -> SurfaceHigherDark
                     }
                 ) {
                     Text(
@@ -488,67 +1056,189 @@ private fun LedgerObligationCard(item: LedgerItemUiModel) {
                         style = MaterialTheme.typography.labelSmall,
                         fontWeight = FontWeight.Bold,
                         color = when (item.obligation.status) {
-                            ObligationStatus.OPEN -> EmeraldPrimary
-                            ObligationStatus.PARTIALLY_SETTLED -> GoldSecondary
-                            ObligationStatus.FULLY_SETTLED -> MaterialTheme.colorScheme.outline
-                            ObligationStatus.OVERPAID -> MaterialTheme.colorScheme.tertiary
+                            ObligationStatus.OPEN -> OpenRed
+                            ObligationStatus.PARTIALLY_SETTLED -> PartialAmber
+                            ObligationStatus.FULLY_SETTLED -> SettledGreen
+                            ObligationStatus.OVERPAID -> OverpaidBlue
                         },
-                        modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp)
+                        modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp),
+                        fontSize = 10.sp
                     )
                 }
             }
 
-            Spacer(modifier = Modifier.height(12.dp))
+            // Note or Transcript
+            if (!item.obligation.notes.isNullOrBlank()) {
+                Text(
+                    text = item.obligation.notes,
+                    style = MaterialTheme.typography.bodySmall,
+                    color = TextSecondary,
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis
+                )
+            } else if (!item.obligation.voiceTranscript.isNullOrBlank()) {
+                Text(
+                    text = "\"${item.obligation.voiceTranscript}\"",
+                    style = MaterialTheme.typography.labelSmall,
+                    color = TextTertiary,
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis
+                )
+            }
 
-            // Explicit Financial Breakdown
+            // Subtle Financial Progress Indicator
+            LinearProgressIndicator(
+                progress = { progressFraction },
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(4.dp)
+                    .clip(RoundedCornerShape(2.dp)),
+                color = if (progressFraction >= 1f) SettledGreen else IQOOLime,
+                trackColor = SurfaceDark,
+                strokeCap = StrokeCap.Round
+            )
+
+            // Financial Values Breakdown Strip
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .background(
-                        color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.35f),
-                        shape = RoundedCornerShape(8.dp)
-                    )
+                    .clip(RoundedCornerShape(12.dp))
+                    .background(SurfaceDark)
                     .padding(horizontal = 12.dp, vertical = 8.dp),
-                horizontalArrangement = Arrangement.SpaceBetween
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
             ) {
                 Column {
-                    Text(
-                        text = "Credit",
-                        style = MaterialTheme.typography.labelSmall,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant
-                    )
-                    Text(
-                        text = item.obligation.originalAmount.formatRupees(),
-                        style = MaterialTheme.typography.bodyMedium,
-                        fontWeight = FontWeight.SemiBold
-                    )
+                    Text(text = "Original Credit", style = MaterialTheme.typography.labelSmall, color = TextTertiary, fontSize = 10.sp)
+                    Text(text = item.obligation.originalAmount.formatRupees(), style = MaterialTheme.typography.bodyMedium, fontWeight = FontWeight.SemiBold, color = TextSecondary)
                 }
-
                 Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                    Text(
-                        text = "Received",
-                        style = MaterialTheme.typography.labelSmall,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant
-                    )
-                    Text(
-                        text = receivedMoney.formatRupees(),
-                        style = MaterialTheme.typography.bodyMedium,
-                        fontWeight = FontWeight.SemiBold,
-                        color = EmeraldPrimary
-                    )
+                    Text(text = "Received", style = MaterialTheme.typography.labelSmall, color = TextTertiary, fontSize = 10.sp)
+                    Text(text = receivedMoney.formatRupees(), style = MaterialTheme.typography.bodyMedium, fontWeight = FontWeight.SemiBold, color = SettledGreen)
                 }
-
                 Column(horizontalAlignment = Alignment.End) {
-                    Text(
-                        text = "Outstanding",
-                        style = MaterialTheme.typography.labelSmall,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant
-                    )
+                    Text(text = "Outstanding", style = MaterialTheme.typography.labelSmall, color = TextTertiary, fontSize = 10.sp)
                     Text(
                         text = item.obligation.remainingAmount.formatRupees(),
-                        style = MaterialTheme.typography.bodyMedium,
+                        style = MaterialTheme.typography.bodyLarge,
+                        fontWeight = FontWeight.ExtraBold,
+                        color = if (item.obligation.remainingAmount.isPositive) OpenRed else SettledGreen
+                    )
+                }
+            }
+
+            // Subtle Tap Hint
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.End,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Text(
+                    text = "View History",
+                    style = MaterialTheme.typography.labelSmall,
+                    fontWeight = FontWeight.SemiBold,
+                    color = IQOOLime,
+                    fontSize = 11.sp
+                )
+                Spacer(modifier = Modifier.width(3.dp))
+                Icon(
+                    imageVector = Icons.AutoMirrored.Filled.ArrowForward,
+                    contentDescription = null,
+                    tint = IQOOLime,
+                    modifier = Modifier.size(12.dp)
+                )
+            }
+        }
+    }
+}
+
+/**
+ * Refined, intentional empty state.
+ */
+@Composable
+private fun IQOOEmptyLedgerCard(
+    activeFilter: LedgerFilter,
+    showGiveFirstCredit: Boolean = true,
+    onGiveCreditClick: () -> Unit
+) {
+    val title = when (activeFilter) {
+        LedgerFilter.ALL -> "Your ledger is ready"
+        LedgerFilter.ACTIVE_DUES -> "All accounts settled"
+        LedgerFilter.SETTLED -> "No settled accounts yet"
+    }
+    val description = when (activeFilter) {
+        LedgerFilter.ALL -> "Record your first credit and PakkaKhata will keep track of the balance automatically."
+        LedgerFilter.ACTIVE_DUES -> "All customer credits have been settled. No pending dues."
+        LedgerFilter.SETTLED -> "Once payment evidence is matched with open credit, reconciled accounts appear here."
+    }
+
+    Card(
+        modifier = Modifier
+            .fillMaxWidth()
+            .testTag("empty_ledger_card"),
+        shape = RoundedCornerShape(20.dp),
+        colors = CardDefaults.cardColors(containerColor = SurfaceCard),
+        border = androidx.compose.foundation.BorderStroke(1.dp, BorderSubtleDark)
+    ) {
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(28.dp),
+            horizontalAlignment = Alignment.CenterHorizontally,
+            verticalArrangement = Arrangement.spacedBy(10.dp)
+        ) {
+            Box(
+                modifier = Modifier
+                    .size(54.dp)
+                    .clip(CircleShape)
+                    .background(SurfaceHigherDark),
+                contentAlignment = Alignment.Center
+            ) {
+                Icon(
+                    imageVector = if (activeFilter == LedgerFilter.ACTIVE_DUES) Icons.Default.DoneAll else Icons.Default.Mic,
+                    contentDescription = null,
+                    tint = if (activeFilter == LedgerFilter.ACTIVE_DUES) SettledGreen else IQOOLime,
+                    modifier = Modifier.size(24.dp)
+                )
+            }
+
+            Text(
+                text = title,
+                style = MaterialTheme.typography.titleMedium,
+                fontWeight = FontWeight.Bold,
+                color = TextPrimary
+            )
+            Text(
+                text = description,
+                style = MaterialTheme.typography.bodySmall,
+                color = TextSecondary,
+                textAlign = androidx.compose.ui.text.style.TextAlign.Center
+            )
+
+            if (showGiveFirstCredit && activeFilter == LedgerFilter.ALL) {
+                Spacer(modifier = Modifier.height(4.dp))
+                Button(
+                    onClick = onGiveCreditClick,
+                    colors = ButtonDefaults.buttonColors(
+                        containerColor = IQOOLime,
+                        contentColor = IQOOOnLime
+                    ),
+                    shape = RoundedCornerShape(16.dp),
+                    contentPadding = PaddingValues(horizontal = 24.dp, vertical = 12.dp),
+                    modifier = Modifier.testTag("give_first_credit_button")
+                ) {
+                    Icon(
+                        imageVector = Icons.Default.Mic,
+                        contentDescription = "Give First Credit Mic",
+                        modifier = Modifier.size(18.dp),
+                        tint = IQOOOnLime
+                    )
+                    Spacer(modifier = Modifier.width(8.dp))
+                    Text(
+                        text = "Give First Credit",
                         fontWeight = FontWeight.Bold,
-                        color = if (item.obligation.remainingAmount.isPositive) Color(0xFFE02424) else EmeraldPrimary
+                        fontSize = 14.sp,
+                        color = IQOOOnLime
                     )
                 }
             }
@@ -556,22 +1246,99 @@ private fun LedgerObligationCard(item: LedgerItemUiModel) {
     }
 }
 
+/**
+ * Audit trail showing recent auto-settlements.
+ */
 @Composable
-private fun MetricItem(
-    label: String,
-    value: String
+private fun IQOORecentSettlementsSection(
+    recentSettlements: List<RecentSettlementUiModel>,
+    onCustomerClick: (Long) -> Unit
 ) {
-    Column(horizontalAlignment = Alignment.CenterHorizontally) {
-        Text(
-            text = value,
-            style = MaterialTheme.typography.headlineSmall,
-            fontWeight = FontWeight.Bold,
-            color = MaterialTheme.colorScheme.primary
-        )
-        Text(
-            text = label,
-            style = MaterialTheme.typography.labelSmall,
-            color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.7f)
-        )
+    Card(
+        modifier = Modifier
+            .fillMaxWidth()
+            .testTag("recent_settlements_card"),
+        shape = RoundedCornerShape(20.dp),
+        colors = CardDefaults.cardColors(containerColor = SurfaceCard),
+        border = androidx.compose.foundation.BorderStroke(1.dp, BorderSubtleDark)
+    ) {
+        Column(
+            modifier = Modifier.padding(16.dp),
+            verticalArrangement = Arrangement.spacedBy(10.dp)
+        ) {
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Text(
+                    text = "Recently Settled",
+                    style = MaterialTheme.typography.titleSmall,
+                    fontWeight = FontWeight.Bold,
+                    color = TextPrimary
+                )
+                Surface(
+                    shape = RoundedCornerShape(6.dp),
+                    color = SettledGreenContainer
+                ) {
+                    Text(
+                        text = "AUTO-RECONCILED",
+                        style = MaterialTheme.typography.labelSmall,
+                        color = SettledGreen,
+                        fontWeight = FontWeight.Bold,
+                        modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp),
+                        fontSize = 9.sp
+                    )
+                }
+            }
+
+            recentSettlements.forEach { settlement ->
+                val appText = settlement.paymentApp?.let { " via $it" } ?: ""
+                val timeFormatted = DateTimeFormatter.formatRelativeTime(settlement.reconciledAt)
+
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .clip(RoundedCornerShape(10.dp))
+                        .clickable { onCustomerClick(settlement.customerId) }
+                        .padding(vertical = 6.dp, horizontal = 4.dp),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.spacedBy(10.dp),
+                        modifier = Modifier.weight(1f)
+                    ) {
+                        Icon(
+                            imageVector = Icons.Default.CheckCircle,
+                            contentDescription = null,
+                            tint = SettledGreen,
+                            modifier = Modifier.size(18.dp)
+                        )
+                        Column {
+                            Text(
+                                text = "Settled ${settlement.settledAmount.formatRupees()} for ${settlement.customerName}$appText",
+                                style = MaterialTheme.typography.bodySmall,
+                                fontWeight = FontWeight.SemiBold,
+                                color = TextPrimary
+                            )
+                            Text(
+                                text = timeFormatted,
+                                style = MaterialTheme.typography.labelSmall,
+                                color = TextTertiary,
+                                fontSize = 11.sp
+                            )
+                        }
+                    }
+                    Icon(
+                        imageVector = Icons.AutoMirrored.Filled.ArrowForward,
+                        contentDescription = null,
+                        tint = TextTertiary,
+                        modifier = Modifier.size(14.dp)
+                    )
+                }
+            }
+        }
     }
 }
