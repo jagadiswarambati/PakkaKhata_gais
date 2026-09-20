@@ -47,4 +47,10 @@ interface ReconciliationDao {
 
     @Query("SELECT SUM(settledAmountPaise) FROM reconciliations")
     fun getTotalSettledAmountPaise(): Flow<Long?>
+
+    @Query("SELECT r.* FROM reconciliations r INNER JOIN obligations o ON r.obligationId = o.id WHERE o.customerId = :customerId ORDER BY r.reconciledAt DESC")
+    fun getReconciliationsByCustomerId(customerId: Long): Flow<List<ReconciliationEntity>>
+
+    @Query("SELECT r.* FROM reconciliations r INNER JOIN obligations o ON r.obligationId = o.id WHERE o.customerId = :customerId ORDER BY r.reconciledAt DESC")
+    suspend fun getReconciliationsByCustomerIdDirect(customerId: Long): List<ReconciliationEntity>
 }
