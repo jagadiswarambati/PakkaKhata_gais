@@ -19,6 +19,8 @@ interface ReconciliationRepository {
     suspend fun deleteReconciliation(reconciliation: Reconciliation)
     fun getReconciliationCount(): Flow<Int>
     fun getTotalSettledAmount(): Flow<Money>
+    fun getReconciliationsByCustomerId(customerId: Long): Flow<List<Reconciliation>>
+    suspend fun getReconciliationsByCustomerIdDirect(customerId: Long): List<Reconciliation>
 }
 
 class ReconciliationRepositoryImpl(
@@ -57,4 +59,10 @@ class ReconciliationRepositoryImpl(
 
     override fun getTotalSettledAmount(): Flow<Money> =
         reconciliationDao.getTotalSettledAmountPaise().map { Money.fromPaise(it ?: 0L) }
+
+    override fun getReconciliationsByCustomerId(customerId: Long): Flow<List<Reconciliation>> =
+        reconciliationDao.getReconciliationsByCustomerId(customerId).map { list -> list.map { it.toDomain() } }
+
+    override suspend fun getReconciliationsByCustomerIdDirect(customerId: Long): List<Reconciliation> =
+        reconciliationDao.getReconciliationsByCustomerIdDirect(customerId).map { it.toDomain() }
 }
