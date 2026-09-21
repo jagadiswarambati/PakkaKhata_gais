@@ -77,6 +77,34 @@ class VoiceCreditDatabaseIntegrationTest {
     }
 
     @Test
+    fun testVoiceCredit_jagadiswar500CreditFlow() = runBlocking {
+        val transcript = "Jagadiswar 500 credit"
+        val parsed = com.example.domain.perception.VoiceCreditParser.parse(transcript)
+        assertTrue(parsed.isSuccess)
+        val entry = parsed.getOrThrow()
+
+        val result = repository.recordCreditObligation(
+            customerName = entry.customerName,
+            amount = entry.amount,
+            voiceTranscript = transcript,
+            notes = entry.optionalNote
+        )
+
+        assertTrue(result.isSuccess)
+        val obligation = result.getOrThrow()
+
+        assertEquals(Money.fromRupees(500L), obligation.originalAmount)
+        assertEquals(Money.fromRupees(500L), obligation.remainingAmount)
+        assertEquals(ObligationStatus.OPEN, obligation.status)
+        assertEquals("Jagadiswar 500 credit", obligation.voiceTranscript)
+
+        val customer = repository.customerRepo.getCustomerByIdDirect(obligation.customerId)
+        assertNotNull(customer)
+        assertEquals("Jagadiswar", customer!!.name)
+        assertEquals(Money.fromRupees(500L), customer.currentBalance)
+    }
+
+    @Test
     fun testVoiceCredit_reusesExistingCustomerCaseInsensitive() = runBlocking {
         // First credit: "Ramesh" ₹500
         val res1 = repository.recordCreditObligation(
