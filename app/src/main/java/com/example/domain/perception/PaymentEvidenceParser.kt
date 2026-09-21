@@ -27,21 +27,30 @@ object PaymentEvidenceParser {
         Pattern.compile("(?i)\\bAmazon\\s*Pay\\b") to "Amazon Pay"
     )
 
-    // Regex for explicit currency amounts: ₹300, ₹ 300, Rs 300, Rs. 1,200, INR 250, etc.
+    // Regex for explicit currency amounts: ₹300, ₹ 300, Rs 300, Rs. 1,200, Re. 1, INR 250, etc.
+    // Handles various OCR character misreads of ₹ symbol such as R, ?, =, F, t, etc. when placed with currency format
     private val CURRENCY_AMOUNT_REGEX = Pattern.compile(
-        "(?i)(?:₹|rs\\.?|inr)\\s*([0-9]{1,3}(?:,[0-9]{3})*(?:\\.[0-9]{1,2})?|[0-9]+(?:\\.[0-9]{1,2})?)",
+        "(?i)(?:₹|rs\\.?|inr|re\\.?|[?F=]\\s*(?=[0-9]))\\s*([0-9]+(?:,[0-9]+)*(?:\\.[0-9]{1,2})?)",
         Pattern.CASE_INSENSITIVE
     )
 
-    // Regex for standalone amounts following keywords like Received, Paid, Amount: e.g. "Received ₹500" or "Amount: 300.00"
+    // Regex for contextual keywords followed by amounts:
+    // e.g. "Received ₹500", "Paid Rs 300", "Debited INR 1200", "Credited 1200", "Amount: 300.00", "Sent 450", etc.
     private val CONTEXTUAL_AMOUNT_REGEX = Pattern.compile(
-        "(?i)(?:received|paid|amount|total)\\s*(?:of|is|:)?\\s*(?:₹|rs\\.?|inr)?\\s*([0-9]{1,3}(?:,[0-9]{3})*(?:\\.[0-9]{1,2})?|[0-9]+(?:\\.[0-9]{1,2})?)",
+        "(?i)(?:received|paid|amount|total|sent|debited|credited|transferred)\\s+(?:of|is|to|from|:)?\\s*(?:₹|rs\\.?|inr|re\\.?)?\\s*([0-9]+(?:,[0-9]+)*(?:\\.[0-9]{1,2})?)",
         Pattern.CASE_INSENSITIVE
     )
 
-    // Regex for standalone line amounts formatted like 300.00 or 1,200.00
-    private val STANDALONE_AMOUNT_LINE_REGEX = Pattern.compile(
-        "^\\s*([0-9]{1,3}(?:,[0-9]{3})*(?:\\.[0-9]{2})|[0-9]{1,6}\\.[0-9]{2})\\s*$"
+    // Regex for standalone line amounts formatted like 300.00, 1,200.00, 1200.50, or standalone integer amounts like 500
+    private val STANDALONE_DECIMAL_LINE_REGEX = Pattern.compile(
+        "^\\s*(?:₹|rs\\.?|inr)?\\s*([0-9]+(?:,[0-9]+)*(?:\\.[0-9]{2})|[0-9]{1,6}\\.[0-9]{2})\\s*$",
+        Pattern.CASE_INSENSITIVE
+    )
+
+    // Regex for standalone integer amount on its own line (e.g. "500" or "1,200")
+    private val STANDALONE_INTEGER_LINE_REGEX = Pattern.compile(
+        "^\\s*(?:₹|rs\\.?|inr)?\\s*([0-9]+(?:,[0-9]+)*)\\s*$",
+        Pattern.CASE_INSENSITIVE
     )
 
     // UTR / Reference number anchors
@@ -89,7 +98,17 @@ object PaymentEvidenceParser {
     }
 
     private fun extractAmount(rawText: String, lines: List<String>): Money? {
-        // 1. Explicit currency symbol search (₹300, Rs 500, Rs. 1,200, INR 250)
+        // 1. Contextual amounts with keywords: "Paid ₹500", "Received Rs 300", "Amount: 1,200", etc.
+        val contextualMatcher = CONTEXTUAL_AMOUNT_REGEX.matcher(rawText)
+        while (contextualMatcher.find()) {
+            val amountStr = contextualMatcher.group(1)
+            val parsed = parseAmountStringToMoney(amountStr)
+            if (parsed != null && parsed.isPositive && parsed.paise in 100..5000000000L) {
+                return parsed
+            }
+        }
+
+        // 2. Explicit currency symbol search (₹300, ₹ 300, Rs 500, Rs. 1,200, INR 250, Re 1)
         val currencyMatcher = CURRENCY_AMOUNT_REGEX.matcher(rawText)
         var firstValidAmount: Money? = null
         while (currencyMatcher.find()) {
@@ -105,24 +124,32 @@ object PaymentEvidenceParser {
         }
         if (firstValidAmount != null) return firstValidAmount
 
-        // 2. Contextual amounts (Received 500, Paid 300)
-        val contextualMatcher = CONTEXTUAL_AMOUNT_REGEX.matcher(rawText)
-        while (contextualMatcher.find()) {
-            val amountStr = contextualMatcher.group(1)
-            val parsed = parseAmountStringToMoney(amountStr)
-            if (parsed != null && parsed.isPositive && parsed.paise in 100..5000000000L) {
-                return parsed
-            }
-        }
-
-        // 3. Standalone lines formatted strictly as decimal currency (e.g. 300.00, 1,200.50)
+        // 3. Standalone lines formatted as decimal currency (e.g. 300.00, 1,200.50)
         for (line in lines) {
-            val standaloneMatcher = STANDALONE_AMOUNT_LINE_REGEX.matcher(line)
+            val standaloneMatcher = STANDALONE_DECIMAL_LINE_REGEX.matcher(line)
             if (standaloneMatcher.matches()) {
                 val amountStr = standaloneMatcher.group(1)
                 val parsed = parseAmountStringToMoney(amountStr)
                 if (parsed != null && parsed.isPositive && parsed.paise in 100..5000000000L) {
                     return parsed
+                }
+            }
+        }
+
+        // 4. Standalone lines formatted as standalone integers (e.g. "500", "1200")
+        // Exclude lines that are UTR reference candidates (>= 8 digits) or 4-digit calendar years (e.g. 2024..2030)
+        for (line in lines) {
+            val clean = line.trim()
+            val standaloneIntMatcher = STANDALONE_INTEGER_LINE_REGEX.matcher(clean)
+            if (standaloneIntMatcher.matches()) {
+                val amountStr = standaloneIntMatcher.group(1)
+                val parsed = parseAmountStringToMoney(amountStr)
+                if (parsed != null && parsed.isPositive && parsed.paise in 100..5000000000L) {
+                    val rupees = parsed.paise / 100L
+                    // Only filter out 4-digit year numbers specifically (2020..2030)
+                    if (rupees !in 2020L..2030L) {
+                        return parsed
+                    }
                 }
             }
         }

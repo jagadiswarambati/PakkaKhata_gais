@@ -27,6 +27,13 @@ class PaymentEvidenceParserTest {
 
         val result4 = PaymentEvidenceParser.parse("Total: ₹1,500.00")
         assertEquals(Money.fromRupees(1500L), result4.extractedAmount)
+
+        // OCR misreads of rupee symbol e.g. ? or = or F
+        val result5 = PaymentEvidenceParser.parse("Payment of ?500 successful")
+        assertEquals(Money.fromRupees(500L), result5.extractedAmount)
+
+        val result6 = PaymentEvidenceParser.parse("Paid =350 to grocery")
+        assertEquals(Money.fromRupees(350L), result6.extractedAmount)
     }
 
     @Test
@@ -42,17 +49,53 @@ class PaymentEvidenceParserTest {
 
         val result4 = PaymentEvidenceParser.parse("Rs. 300.50 credited")
         assertEquals(Money.fromPaise(30050L), result4.extractedAmount)
+
+        val result5 = PaymentEvidenceParser.parse("Re. 1 paid to test account")
+        assertEquals(Money.fromRupees(1L), result5.extractedAmount)
     }
 
     @Test
-    fun testAmount_standaloneDecimal() {
-        val text = """
+    fun testAmount_contextualKeywords() {
+        // Debited, Credited, Transferred, Sent
+        val res1 = PaymentEvidenceParser.parse("Debited 500.00 from bank account")
+        assertEquals(Money.fromRupees(500L), res1.extractedAmount)
+
+        val res2 = PaymentEvidenceParser.parse("Credited 1200 to account")
+        assertEquals(Money.fromRupees(1200L), res2.extractedAmount)
+
+        val res3 = PaymentEvidenceParser.parse("Sent 450 to Ramesh")
+        assertEquals(Money.fromRupees(450L), res3.extractedAmount)
+
+        val res4 = PaymentEvidenceParser.parse("Transferred ₹ 2,500 successfully")
+        assertEquals(Money.fromRupees(2500L), res4.extractedAmount)
+    }
+
+    @Test
+    fun testAmount_standaloneLines() {
+        val text1 = """
             Payment Received
             300.00
             GPay
         """.trimIndent()
-        val result = PaymentEvidenceParser.parse(text)
-        assertEquals(Money.fromRupees(300L), result.extractedAmount)
+        val result1 = PaymentEvidenceParser.parse(text1)
+        assertEquals(Money.fromRupees(300L), result1.extractedAmount)
+
+        val text2 = """
+            Payment Successful
+            500
+            PhonePe
+            UPI Ref: 123456789012
+        """.trimIndent()
+        val result2 = PaymentEvidenceParser.parse(text2)
+        assertEquals(Money.fromRupees(500L), result2.extractedAmount)
+
+        val text3 = """
+            Transferred
+            ₹ 1,250
+            Paid by Ramesh
+        """.trimIndent()
+        val result3 = PaymentEvidenceParser.parse(text3)
+        assertEquals(Money.fromRupees(1250L), result3.extractedAmount)
     }
 
     // ==========================================
