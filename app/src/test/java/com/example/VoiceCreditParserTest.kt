@@ -35,6 +35,16 @@ class VoiceCreditParserTest {
     }
 
     @Test
+    fun testEnglish_jagadiswar500Credit() {
+        val result = VoiceCreditParser.parse("Jagadiswar 500 credit")
+        assertTrue(result.isSuccess)
+        val entry = result.getOrThrow()
+        assertEquals("Jagadiswar", entry.customerName)
+        assertEquals(Money.fromRupees(500L), entry.amount)
+        assertNull(entry.optionalNote)
+    }
+
+    @Test
     fun testEnglish_nameAmountAndItemNote() {
         val result = VoiceCreditParser.parse("Ramesh 250 doodh")
         assertTrue(result.isSuccess)
