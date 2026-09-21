@@ -57,6 +57,20 @@ import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.domain.model.ObligationStatus
+import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.material.icons.filled.Payment
+import androidx.compose.material3.AlertDialog
+import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.FilterChip
+import androidx.compose.material3.FilterChipDefaults
+import androidx.compose.material3.OutlinedButton
+import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.OutlinedTextFieldDefaults
+import androidx.compose.material3.TextButton
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.ui.text.input.KeyboardType
+import com.example.domain.model.Obligation
 import com.example.presentation.screens.customer.LinkedSettlementUiModel
 import com.example.presentation.screens.customer.ObligationDetailUiModel
 import com.example.presentation.util.DateTimeFormatter
@@ -80,6 +94,20 @@ fun CustomerDetailScreen(
     )
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
     var selectedTab by remember { mutableIntStateOf(0) }
+    var selectedObligationForPayment by remember { mutableStateOf<Obligation?>(null) }
+
+    if (selectedObligationForPayment != null) {
+        val ob = selectedObligationForPayment!!
+        RecordPaymentDialog(
+            obligation = ob,
+            customerName = uiState.customer?.name ?: "Customer",
+            onDismiss = { selectedObligationForPayment = null },
+            onConfirm = { amount, method, reference ->
+                viewModel.recordPayment(ob.id, amount, method, reference)
+                selectedObligationForPayment = null
+            }
+        )
+    }
 
     Scaffold(
         modifier = modifier
@@ -221,7 +249,10 @@ fun CustomerDetailScreen(
                         }
                     } else {
                         items(uiState.obligations, key = { it.obligation.id }) { item ->
-                            CustomerObligationCard(item)
+                            CustomerObligationCard(
+                                item = item,
+                                onRecordPayment = { selectedObligationForPayment = item.obligation }
+                            )
                         }
                     }
                 } else {
@@ -415,7 +446,10 @@ private fun CustomerHeroCard(uiState: CustomerDetailUiState) {
 }
 
 @Composable
-private fun CustomerObligationCard(item: ObligationDetailUiModel) {
+private fun CustomerObligationCard(
+    item: ObligationDetailUiModel,
+    onRecordPayment: () -> Unit = {}
+) {
     val colors = PakkaTheme.colors
     val ob = item.obligation
     val receivedPaise = maxOf(0L, ob.originalAmount.paise - ob.remainingAmount.paise)
@@ -567,6 +601,33 @@ private fun CustomerObligationCard(item: ObligationDetailUiModel) {
                     }
                 }
             }
+
+            if (ob.remainingAmount.isPositive) {
+                Spacer(modifier = Modifier.height(4.dp))
+                Button(
+                    onClick = onRecordPayment,
+                    colors = ButtonDefaults.buttonColors(
+                        containerColor = colors.limePrimary,
+                        contentColor = colors.onLimePrimary
+                    ),
+                    shape = RoundedCornerShape(12.dp),
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .testTag("record_payment_for_obligation_${ob.id}")
+                ) {
+                    Icon(
+                        imageVector = Icons.Default.Payment,
+                        contentDescription = null,
+                        modifier = Modifier.size(16.dp)
+                    )
+                    Spacer(modifier = Modifier.width(8.dp))
+                    Text(
+                        text = "Record Payment (${ob.remainingAmount.formatRupees()} due)",
+                        fontWeight = FontWeight.Bold,
+                        fontSize = 13.sp
+                    )
+                }
+            }
         }
     }
 }
@@ -704,4 +765,136 @@ private fun EmptySectionCard(
             )
         }
     }
+}
+
+@Composable
+private fun RecordPaymentDialog(
+    obligation: Obligation,
+    customerName: String,
+    onDismiss: () -> Unit,
+    onConfirm: (amount: String, method: String, reference: String?) -> Unit
+) {
+    val colors = PakkaTheme.colors
+    val remainingRupees = (obligation.remainingAmount.paise / 100).toString()
+    var amountText by remember { mutableStateOf(remainingRupees) }
+    var selectedMethod by remember { mutableStateOf("Cash") }
+    var referenceText by remember { mutableStateOf("") }
+    var errorMessage by remember { mutableStateOf<String?>(null) }
+
+    val methods = listOf("Cash", "UPI / QR", "Bank Transfer", "Google Pay", "PhonePe")
+
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        containerColor = colors.surfaceCardElevated,
+        title = {
+            Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
+                Text(
+                    text = "Record Payment",
+                    style = MaterialTheme.typography.titleLarge,
+                    fontWeight = FontWeight.Bold,
+                    color = colors.textPrimary
+                )
+                Text(
+                    text = "$customerName • Due: ${obligation.remainingAmount.formatRupees()}",
+                    style = MaterialTheme.typography.labelSmall,
+                    color = colors.textSecondary
+                )
+            }
+        },
+        text = {
+            Column(
+                verticalArrangement = Arrangement.spacedBy(14.dp),
+                modifier = Modifier.fillMaxWidth()
+            ) {
+                // Payment Method Selector
+                Text(
+                    text = "Payment Mode",
+                    style = MaterialTheme.typography.labelSmall,
+                    fontWeight = FontWeight.Bold,
+                    color = colors.textSecondary
+                )
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.spacedBy(6.dp)
+                ) {
+                    methods.take(3).forEach { method ->
+                        FilterChip(
+                            selected = selectedMethod == method,
+                            onClick = { selectedMethod = method },
+                            label = { Text(method, fontSize = 11.sp) },
+                            colors = FilterChipDefaults.filterChipColors(
+                                selectedContainerColor = colors.limeContainer,
+                                selectedLabelColor = colors.textPrimary
+                            )
+                        )
+                    }
+                }
+
+                // Amount Field
+                OutlinedTextField(
+                    value = amountText,
+                    onValueChange = {
+                        amountText = it
+                        errorMessage = null
+                    },
+                    label = { Text("Amount (₹)") },
+                    isError = errorMessage != null,
+                    supportingText = errorMessage?.let { { Text(it, color = colors.openRed) } },
+                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
+                    singleLine = true,
+                    colors = OutlinedTextFieldDefaults.colors(
+                        focusedBorderColor = colors.limePrimary,
+                        unfocusedBorderColor = colors.borderMedium
+                    ),
+                    modifier = Modifier.fillMaxWidth()
+                )
+
+                // Quick Full Settlement Fill Button
+                OutlinedButton(
+                    onClick = { amountText = remainingRupees },
+                    modifier = Modifier.fillMaxWidth(),
+                    shape = RoundedCornerShape(10.dp)
+                ) {
+                    Text("Pay Full Balance (${obligation.remainingAmount.formatRupees()})", fontSize = 12.sp)
+                }
+
+                // Reference / UTR Note
+                OutlinedTextField(
+                    value = referenceText,
+                    onValueChange = { referenceText = it },
+                    label = { Text("Reference / UTR / Note (Optional)") },
+                    singleLine = true,
+                    colors = OutlinedTextFieldDefaults.colors(
+                        focusedBorderColor = colors.limePrimary,
+                        unfocusedBorderColor = colors.borderSubtle
+                    ),
+                    modifier = Modifier.fillMaxWidth()
+                )
+            }
+        },
+        confirmButton = {
+            Button(
+                onClick = {
+                    val amountVal = amountText.trim().toDoubleOrNull()
+                    if (amountVal == null || amountVal <= 0.0) {
+                        errorMessage = "Please enter a valid amount"
+                        return@Button
+                    }
+                    onConfirm(amountText.trim(), selectedMethod, referenceText.trim().ifBlank { null })
+                },
+                colors = ButtonDefaults.buttonColors(
+                    containerColor = colors.limePrimary,
+                    contentColor = colors.onLimePrimary
+                ),
+                shape = RoundedCornerShape(12.dp)
+            ) {
+                Text("Confirm & Settle", fontWeight = FontWeight.Bold)
+            }
+        },
+        dismissButton = {
+            TextButton(onClick = onDismiss) {
+                Text("Cancel", color = colors.textSecondary)
+            }
+        }
+    )
 }
