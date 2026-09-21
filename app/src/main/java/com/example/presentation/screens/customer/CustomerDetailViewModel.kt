@@ -18,6 +18,8 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.stateIn
 
+import kotlinx.coroutines.launch
+
 data class LinkedSettlementUiModel(
     val reconciliation: Reconciliation,
     val evidence: PaymentEvidence?
@@ -46,6 +48,44 @@ class CustomerDetailViewModel(
         PakkaKhataDatabase.getDatabase(application)
     )
 ) : AndroidViewModel(application) {
+
+    fun recordPayment(
+        obligationId: Long,
+        amountRupees: String,
+        paymentMethod: String = "Cash",
+        reference: String? = null
+    ) {
+        val amountDouble = amountRupees.trim().toDoubleOrNull() ?: return
+        if (amountDouble <= 0.0) return
+        val paise = (amountDouble * 100.0 + 0.5).toLong()
+        val money = Money.fromPaise(paise)
+
+        viewModelScope.launch {
+            val evidence = PaymentEvidence(
+                imagePath = "",
+                extractedAmount = money,
+                extractedSenderName = uiState.value.customer?.name,
+                utrNumber = reference?.trim()?.ifBlank { null },
+                ocrRawText = "Direct Payment: $paymentMethod",
+                paymentApp = paymentMethod,
+                timestamp = System.currentTimeMillis()
+            )
+
+            val obligation = ledgerRepository.obligationRepo.getObligationByIdDirect(obligationId) ?: return@launch
+            val plan = com.example.domain.reconciliation.SettlementCalculator.calculate(
+                remainingAmount = obligation.remainingAmount,
+                paidAmount = money
+            )
+
+            ledgerRepository.executeAtomicSettlement(
+                evidence = evidence,
+                obligationId = obligationId,
+                settledAmount = plan.settledAmount,
+                matchConfidence = 1.0f,
+                outcome = plan.outcome
+            )
+        }
+    }
 
     val uiState: StateFlow<CustomerDetailUiState> = combine(
         ledgerRepository.customerRepo.getCustomerById(customerId),
