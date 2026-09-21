@@ -164,6 +164,78 @@ class Phase6FinalLedgerAndCustomerDetailTest {
     }
 
     @Test
+    fun testManualRecordPaymentFlow_500to300to200toZero() = runBlocking {
+        // Obligation of ₹500
+        val recordResult = repository.recordCreditObligation(
+            customerName = "Jagadiswar",
+            amount = Money.fromRupees(500),
+            voiceTranscript = "Jagadiswar 500 credit"
+        )
+        assertTrue(recordResult.isSuccess)
+        val obligation = recordResult.getOrThrow()
+
+        // 1. First manual payment of ₹300
+        val payment1 = Money.fromRupees(300)
+        val evidence1 = PaymentEvidence(
+            imagePath = "",
+            extractedAmount = payment1,
+            extractedSenderName = "Jagadiswar",
+            paymentApp = "Cash",
+            ocrRawText = "Direct Payment: Cash"
+        )
+        val plan1 = com.example.domain.reconciliation.SettlementCalculator.calculate(
+            remainingAmount = obligation.remainingAmount,
+            paidAmount = payment1
+        )
+        val settle1 = repository.executeAtomicSettlement(
+            evidence = evidence1,
+            obligationId = obligation.id,
+            settledAmount = plan1.settledAmount,
+            matchConfidence = 1.0f,
+            outcome = plan1.outcome
+        )
+        assertTrue(settle1.isSuccess)
+
+        val obAfterP1 = repository.obligationRepo.getObligationByIdDirect(obligation.id)
+        assertNotNull(obAfterP1)
+        assertEquals(Money.fromRupees(200), obAfterP1!!.remainingAmount)
+        assertEquals(ObligationStatus.PARTIALLY_SETTLED, obAfterP1.status)
+
+        val custAfterP1 = repository.customerRepo.getCustomerByIdDirect(obligation.customerId)
+        assertEquals(Money.fromRupees(200), custAfterP1!!.currentBalance)
+
+        // 2. Second manual payment of remaining ₹200
+        val payment2 = Money.fromRupees(200)
+        val evidence2 = PaymentEvidence(
+            imagePath = "",
+            extractedAmount = payment2,
+            extractedSenderName = "Jagadiswar",
+            paymentApp = "UPI",
+            ocrRawText = "Direct Payment: UPI"
+        )
+        val plan2 = com.example.domain.reconciliation.SettlementCalculator.calculate(
+            remainingAmount = obAfterP1.remainingAmount,
+            paidAmount = payment2
+        )
+        val settle2 = repository.executeAtomicSettlement(
+            evidence = evidence2,
+            obligationId = obligation.id,
+            settledAmount = plan2.settledAmount,
+            matchConfidence = 1.0f,
+            outcome = plan2.outcome
+        )
+        assertTrue(settle2.isSuccess)
+
+        val obAfterP2 = repository.obligationRepo.getObligationByIdDirect(obligation.id)
+        assertNotNull(obAfterP2)
+        assertEquals(Money.ZERO, obAfterP2!!.remainingAmount)
+        assertEquals(ObligationStatus.FULLY_SETTLED, obAfterP2.status)
+
+        val custAfterP2 = repository.customerRepo.getCustomerByIdDirect(obligation.customerId)
+        assertEquals(Money.ZERO, custAfterP2!!.currentBalance)
+    }
+
+    @Test
     fun testDateTimeFormatter() {
         val now = System.currentTimeMillis()
         val formattedToday = DateTimeFormatter.formatRelativeTime(now)
