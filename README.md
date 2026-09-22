@@ -5,6 +5,7 @@
 PakkaKhata is an Android application designed for small shopkeepers who manage customer credit (`udhaar`). Instead of only recording that a customer owes money, PakkaKhata connects the original credit obligation with payment evidence received later.
 
 A shopkeeper can create a credit entry using **voice or manual input**, capture a **UPI payment screenshot/photo**, extract payment information using **on-device OCR**, and let an **explainable local reconciliation engine** determine which open credit the payment belongs to.
+
 **LATEST UPDATED VERSION:** 
 **https://drive.google.com/file/d/1SOnFHur7Mmxn9uGGY7IhfNLm8RqOHC4u/view?usp=sharing**
 
