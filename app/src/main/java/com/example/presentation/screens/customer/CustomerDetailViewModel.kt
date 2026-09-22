@@ -13,11 +13,13 @@ import com.example.domain.model.Money
 import com.example.domain.model.Obligation
 import com.example.domain.model.PaymentEvidence
 import com.example.domain.model.Reconciliation
+import com.example.domain.reconciliation.DuplicateDetector
+import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.stateIn
-
 import kotlinx.coroutines.launch
 
 data class LinkedSettlementUiModel(
@@ -49,6 +51,12 @@ class CustomerDetailViewModel(
     )
 ) : AndroidViewModel(application) {
 
+    private val _actionErrorMessage = MutableStateFlow<String?>(null)
+
+    fun clearErrorMessage() {
+        _actionErrorMessage.value = null
+    }
+
     fun recordPayment(
         obligationId: Long,
         amountRupees: String,
@@ -71,6 +79,14 @@ class CustomerDetailViewModel(
                 timestamp = System.currentTimeMillis()
             )
 
+            // Check for duplicate payment (e.g. duplicate UTR or identical payment reference)
+            val existingEvidences = ledgerRepository.evidenceRepo.getAllEvidence().first()
+            val duplicateCheck = DuplicateDetector.checkForDuplicate(evidence, existingEvidences)
+            if (duplicateCheck.isDuplicate) {
+                _actionErrorMessage.value = duplicateCheck.reason ?: "This payment appears to have already been recorded."
+                return@launch
+            }
+
             val obligation = ledgerRepository.obligationRepo.getObligationByIdDirect(obligationId) ?: return@launch
             val plan = com.example.domain.reconciliation.SettlementCalculator.calculate(
                 remainingAmount = obligation.remainingAmount,
@@ -91,8 +107,9 @@ class CustomerDetailViewModel(
         ledgerRepository.customerRepo.getCustomerById(customerId),
         ledgerRepository.obligationRepo.getObligationsByCustomer(customerId),
         ledgerRepository.reconciliationRepo.getReconciliationsByCustomerId(customerId),
-        ledgerRepository.evidenceRepo.getAllEvidence()
-    ) { customer, obligations, customerReconciliations, allEvidence ->
+        ledgerRepository.evidenceRepo.getAllEvidence(),
+        _actionErrorMessage
+    ) { customer, obligations, customerReconciliations, allEvidence, actionError ->
         if (customer == null) {
             return@combine CustomerDetailUiState(
                 isLoading = false,
@@ -137,7 +154,8 @@ class CustomerDetailViewModel(
             totalReceived = Money.fromPaise(totalReceivedPaise),
             currentBalance = Money.fromPaise(currentBalancePaise),
             obligations = obligationUiModels,
-            paymentHistory = paymentHistory
+            paymentHistory = paymentHistory,
+            errorMessage = actionError
         )
     }.stateIn(
         scope = viewModelScope,
