@@ -120,7 +120,7 @@ fun OfficeBridgeBottomSheet(
                 Column {
                     Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                         Text(
-                            text = "Office Bridge & Tools",
+                            text = "Export & Tools",
                             style = MaterialTheme.typography.titleLarge,
                             fontWeight = FontWeight.ExtraBold,
                             color = colors.textPrimary
@@ -130,7 +130,7 @@ fun OfficeBridgeBottomSheet(
                             color = colors.limeContainer
                         ) {
                             Text(
-                                text = "OFFLINE AI",
+                                text = "100% LOCAL",
                                 style = MaterialTheme.typography.labelSmall,
                                 fontWeight = FontWeight.Bold,
                                 color = if (colors.isDark) colors.limePrimary else colors.onLimeContainer,
@@ -170,7 +170,7 @@ fun OfficeBridgeBottomSheet(
                     onClick = { selectedTab = 0 },
                     text = {
                         Text(
-                            text = "Office Bridge",
+                            text = "Share & Clipboard",
                             fontWeight = if (selectedTab == 0) FontWeight.Bold else FontWeight.Medium,
                             fontSize = 13.sp
                         )
@@ -233,7 +233,7 @@ fun OfficeBridgeBottomSheet(
                                 appendLine("Verified 100% On-Device • PakkaKhata")
                             }
                             OfficeBridgeService.copyToClipboard(context, "Ledger Snapshot", snapshotText)
-                            Toast.makeText(context, "Copied for Office Kit Shared Clipboard", Toast.LENGTH_SHORT).show()
+                            Toast.makeText(context, "Ledger snapshot copied to clipboard", Toast.LENGTH_SHORT).show()
                         }
                     )
                     1 -> DemoModeContent(
@@ -273,7 +273,7 @@ private fun OfficeBridgeContent(
             Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                 Icon(imageVector = Icons.Default.Laptop, contentDescription = null, tint = colors.limePrimary, modifier = Modifier.size(20.dp))
                 Text(
-                    text = "CONTINUE ON YOUR LAPTOP",
+                    text = "DESKTOP & EXTERNAL WORKFLOWS",
                     style = MaterialTheme.typography.labelSmall,
                     fontWeight = FontWeight.ExtraBold,
                     color = colors.limePrimary,
@@ -281,7 +281,7 @@ private fun OfficeBridgeContent(
                 )
             }
             Text(
-                text = "Workflows designed for iQOO Office Kit synergy: cross-device clipboard, local report export, and laptop payment screenshot handoff.",
+                text = "Interoperability using standard Android features: system clipboard, local report export via Share Sheet, and screenshot selection.",
                 style = MaterialTheme.typography.bodySmall,
                 color = colors.textSecondary
             )
@@ -303,7 +303,7 @@ private fun OfficeBridgeContent(
                 color = colors.textPrimary
             )
             Text(
-                text = "Generates a clean Markdown / Text financial report of all customers, balances, and settlements. Sent via Android Share Sheet (Office Kit File Transfer / Nearby Share).",
+                text = "Generates a clean Markdown / Text financial report of all customers, balances, and settlements. Sent via Android Share Sheet (Quick Share, Email, or messaging apps).",
                 style = MaterialTheme.typography.bodySmall,
                 color = colors.textSecondary
             )
@@ -315,7 +315,7 @@ private fun OfficeBridgeContent(
             ) {
                 Icon(imageVector = Icons.Default.Share, contentDescription = null, modifier = Modifier.size(18.dp))
                 Spacer(modifier = Modifier.width(8.dp))
-                Text("Export & Share Report to Laptop", fontWeight = FontWeight.Bold)
+                Text("Export & Share Report via Android Share", fontWeight = FontWeight.Bold)
             }
         }
     }
@@ -329,13 +329,13 @@ private fun OfficeBridgeContent(
     ) {
         Column(modifier = Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {
             Text(
-                text = "2. Import Payment Evidence from Laptop",
+                text = "2. Select Payment Screenshot",
                 style = MaterialTheme.typography.titleSmall,
                 fontWeight = FontWeight.Bold,
                 color = colors.textPrimary
             )
             Text(
-                text = "Have a payment screenshot on your laptop? Transfer it via Office Kit and select it here for instant on-device OCR and matching.",
+                text = "Have a payment screenshot saved on your device or transferred from a PC? Select it using the Android photo picker for instant on-device OCR and matching.",
                 style = MaterialTheme.typography.bodySmall,
                 color = colors.textSecondary
             )
@@ -347,7 +347,7 @@ private fun OfficeBridgeContent(
             ) {
                 Icon(imageVector = Icons.Default.FolderOpen, contentDescription = null, tint = colors.limePrimary, modifier = Modifier.size(18.dp))
                 Spacer(modifier = Modifier.width(8.dp))
-                Text("Select Transferred Screenshot", fontWeight = FontWeight.SemiBold, color = colors.limePrimary)
+                Text("Select Screenshot from Storage", fontWeight = FontWeight.SemiBold, color = colors.limePrimary)
             }
         }
     }
@@ -361,13 +361,13 @@ private fun OfficeBridgeContent(
     ) {
         Column(modifier = Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {
             Text(
-                text = "3. Copy Snapshot (Shared Clipboard)",
+                text = "3. Copy Snapshot to Clipboard",
                 style = MaterialTheme.typography.titleSmall,
                 fontWeight = FontWeight.Bold,
                 color = colors.textPrimary
             )
             Text(
-                text = "Copies active store balances onto the system clipboard. Paste immediately on your laptop into Excel, Google Sheets, or WhatsApp Web.",
+                text = "Copies active store balances onto the Android system clipboard. Available for pasting into spreadsheets, messages, or notes.",
                 style = MaterialTheme.typography.bodySmall,
                 color = colors.textSecondary
             )
