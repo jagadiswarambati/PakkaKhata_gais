@@ -5,7 +5,7 @@ import java.util.Locale
 
 /**
  * Money representation in integer paise (1 Rupee = 100 Paise).
- * Floating-point arithmetic is strictly forbidden for financial calculations to prevent rounding errors.
+ * Financial balances and settlement calculations use integer paise to avoid rounding errors.
  */
 @JvmInline
 value class Money(val paise: Long) : Comparable<Money> {
