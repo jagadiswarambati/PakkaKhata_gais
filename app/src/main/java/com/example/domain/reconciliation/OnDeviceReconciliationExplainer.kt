@@ -4,11 +4,11 @@ import com.example.domain.model.Money
 import com.example.domain.model.SettlementOutcome
 
 /**
- * On-Device Explanation Engine (Priority 1: Option B)
+ * On-Device Match Explainer
  *
  * Converts structured deterministic reconciliation signals (fuzzy name similarity,
  * amount calculations, temporal order, and duplicate detection) into fluent,
- * human-readable explanations on the device.
+ * explainable, human-readable match reasoning.
  *
  * Runs 100% locally and offline without external network calls or cloud models.
  * The deterministic reconciliation engine remains the authoritative source of truth.
@@ -19,8 +19,7 @@ object OnDeviceReconciliationExplainer {
         val headline: String,
         val naturalExplanation: String,
         val keyPoints: List<String>,
-        val confidenceRating: String,
-        val isLocalModelGenerated: Boolean = true
+        val confidenceRating: String
     )
 
     /**
