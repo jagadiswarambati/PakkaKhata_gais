@@ -185,6 +185,47 @@ fun CustomerDetailScreen(
                 ),
                 verticalArrangement = Arrangement.spacedBy(16.dp)
             ) {
+                // Duplicate / Action Error Notice Banner
+                if (uiState.errorMessage != null) {
+                    item {
+                        Card(
+                            colors = CardDefaults.cardColors(containerColor = colors.openRedContainer),
+                            shape = RoundedCornerShape(12.dp),
+                            border = androidx.compose.foundation.BorderStroke(1.dp, colors.openRed),
+                            modifier = Modifier.fillMaxWidth().testTag("duplicate_error_banner")
+                        ) {
+                            Row(
+                                modifier = Modifier.padding(14.dp),
+                                horizontalArrangement = Arrangement.spacedBy(10.dp),
+                                verticalAlignment = Alignment.CenterVertically
+                            ) {
+                                Icon(
+                                    imageVector = Icons.Default.Payment,
+                                    contentDescription = null,
+                                    tint = colors.openRed,
+                                    modifier = Modifier.size(20.dp)
+                                )
+                                Column(modifier = Modifier.weight(1f)) {
+                                    Text(
+                                        text = "Payment Cannot Be Processed",
+                                        style = MaterialTheme.typography.titleSmall,
+                                        fontWeight = FontWeight.Bold,
+                                        color = colors.openRed
+                                    )
+                                    Text(
+                                        text = uiState.errorMessage!!,
+                                        style = MaterialTheme.typography.bodySmall,
+                                        color = colors.textPrimary
+                                    )
+                                }
+                                TextButton(onClick = { viewModel.clearErrorMessage() }) {
+                                    Text("Dismiss", color = colors.openRed, fontWeight = FontWeight.Bold)
+                                }
+                            }
+                        }
+                    }
+                }
+
                 // Customer Hero Balance Card
                 item {
                     CustomerHeroCard(uiState = uiState)
