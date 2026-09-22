@@ -869,7 +869,7 @@ fun MatchExplanationCard(
 
                 Spacer(modifier = Modifier.height(8.dp))
 
-                // On-Device AI Explanation
+                // Match Reasoning Explanation
                 val explanation = remember(candidate) {
                     com.example.domain.reconciliation.OnDeviceReconciliationExplainer.explain(candidate)
                 }
@@ -889,7 +889,7 @@ fun MatchExplanationCard(
                                 color = colors.limeContainer
                             ) {
                                 Text(
-                                    text = "ON-DEVICE AI EXPLANATION",
+                                    text = "MATCH REASONING",
                                     style = MaterialTheme.typography.labelSmall,
                                     fontWeight = FontWeight.ExtraBold,
                                     color = if (colors.isDark) colors.limePrimary else colors.onLimeContainer,
@@ -898,7 +898,7 @@ fun MatchExplanationCard(
                                 )
                             }
                             Text(
-                                text = "100% Local",
+                                text = "Deterministic Audit",
                                 style = MaterialTheme.typography.labelSmall,
                                 color = colors.textTertiary,
                                 fontSize = 10.sp
