@@ -356,7 +356,7 @@ class HomeViewModel @JvmOverloads constructor(
     }
 
     /**
-     * Exports local store ledger summary to laptop via Office Kit / Android Share Sheet.
+     * Exports local store ledger summary via Android Share Sheet.
      */
     fun exportLedgerReport(context: android.content.Context) {
         viewModelScope.launch {
