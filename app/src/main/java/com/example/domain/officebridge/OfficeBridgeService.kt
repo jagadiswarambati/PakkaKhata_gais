@@ -15,14 +15,14 @@ import java.util.Date
 import java.util.Locale
 
 /**
- * Office Bridge Workflow Manager (Priority 3)
+ * System Clipboard & Share Service
  *
- * Provides purposeful phone <-> laptop workflows for the iQOO Office Kit bridge:
- * 1. Shared Clipboard: Formatted reconciliation and settlement summaries
+ * Provides phone-to-PC/external workflows using standard Android capabilities:
+ * 1. System Clipboard: Formatted reconciliation and settlement summaries
  * 2. File / Report Transfer: Formats comprehensive local ledger export for PC spreadsheet import
- * 3. Payment Evidence Hand-off: Laptop screenshot processing on phone
+ * 3. Payment Evidence Hand-off: Screenshot selection and OCR on phone
  *
- * 100% offline, local generation. Does not fake or simulate Office Kit APIs or telemetry.
+ * 100% offline, local generation using standard Android ClipboardManager and Intent.ACTION_SEND.
  */
 object OfficeBridgeService {
 
@@ -70,7 +70,7 @@ object OfficeBridgeService {
     }
 
     /**
-     * Copies text to system clipboard (which Office Kit syncs across phone and laptop).
+     * Copies text to system clipboard (available for pasting or cross-device sync).
      */
     fun copyToClipboard(context: Context, label: String, text: String): Boolean {
         return try {
@@ -84,7 +84,7 @@ object OfficeBridgeService {
     }
 
     /**
-     * Generates a complete Local Ledger Report (Markdown / Text) for export to laptop.
+     * Generates a complete Local Ledger Report (Markdown / Text) for export.
      */
     fun generateLedgerReport(
         customers: List<Customer>,
@@ -124,8 +124,8 @@ object OfficeBridgeService {
     }
 
     /**
-     * Launches Android system share sheet for the ledger report so it can be transferred
-     * via Office Kit, Quick Share, or saved to a file on laptop.
+     * Launches Android system share sheet for the ledger report so it can be shared
+     * via Quick Share, email, messaging apps, or saved locally.
      */
     fun shareLedgerReport(context: Context, reportContent: String) {
         val shareIntent = Intent(Intent.ACTION_SEND).apply {
@@ -133,6 +133,6 @@ object OfficeBridgeService {
             putExtra(Intent.EXTRA_SUBJECT, "PakkaKhata Ledger Summary")
             putExtra(Intent.EXTRA_TEXT, reportContent)
         }
-        context.startActivity(Intent.createChooser(shareIntent, "Share Ledger Report to Laptop via Office Kit"))
+        context.startActivity(Intent.createChooser(shareIntent, "Share Ledger Report via Android Share"))
     }
 }
