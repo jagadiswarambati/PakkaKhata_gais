@@ -508,7 +508,7 @@ private fun IQOOOfficeBridgeCard(
                         horizontalArrangement = Arrangement.spacedBy(6.dp)
                     ) {
                         Text(
-                            text = "Office Bridge & Tools",
+                            text = "Export & Tools",
                             style = MaterialTheme.typography.titleSmall,
                             fontWeight = FontWeight.Bold,
                             color = colors.textPrimary
@@ -518,7 +518,7 @@ private fun IQOOOfficeBridgeCard(
                             color = colors.surface
                         ) {
                             Text(
-                                text = "OFFLINE AI",
+                                text = "100% LOCAL",
                                 style = MaterialTheme.typography.labelSmall,
                                 fontWeight = FontWeight.ExtraBold,
                                 color = colors.limePrimary,
@@ -528,7 +528,7 @@ private fun IQOOOfficeBridgeCard(
                         }
                     }
                     Text(
-                        text = "Shared clipboard, report export & 3-min demo",
+                        text = "System clipboard, report export & 3-min demo",
                         style = MaterialTheme.typography.bodySmall,
                         color = colors.textSecondary,
                         fontSize = 11.sp
