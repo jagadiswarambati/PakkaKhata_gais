@@ -291,7 +291,7 @@ fun SettlementResultScreen(
 
                             Spacer(modifier = Modifier.height(24.dp))
 
-                            // Office Kit Shared Clipboard action
+                            // System Clipboard action
                             val context = androidx.compose.ui.platform.LocalContext.current
                             androidx.compose.material3.OutlinedButton(
                                 onClick = {
@@ -313,7 +313,7 @@ fun SettlementResultScreen(
                                     if (success) {
                                         android.widget.Toast.makeText(
                                             context,
-                                            "Copied for Office Kit Shared Clipboard",
+                                            "Settlement summary copied to clipboard",
                                             android.widget.Toast.LENGTH_SHORT
                                         ).show()
                                     }
@@ -333,7 +333,7 @@ fun SettlementResultScreen(
                                 )
                                 Spacer(modifier = Modifier.width(8.dp))
                                 Text(
-                                    text = "Copy for Office Kit (Shared Clipboard)",
+                                    text = "Copy Settlement Summary to Clipboard",
                                     style = MaterialTheme.typography.bodyMedium,
                                     fontWeight = FontWeight.SemiBold,
                                     color = colors.limePrimary
