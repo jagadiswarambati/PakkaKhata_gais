@@ -13,6 +13,7 @@ import com.example.domain.usecase.EvaluateReconciliationUseCase
 import com.example.domain.usecase.ExecuteSettlementUseCase
 import com.example.presentation.util.DateTimeFormatter
 import java.util.Calendar
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.runBlocking
 import org.junit.After
 import org.junit.Assert.assertEquals
@@ -259,5 +260,87 @@ class Phase6FinalLedgerAndCustomerDetailTest {
         assertEquals("₹0", Money.ZERO.formatRupees())
         assertEquals("₹50.50", Money.fromPaise(5050L).formatRupees())
         assertEquals("-₹500", Money.fromPaise(-50000L).formatRupees())
+    }
+
+    @Test
+    fun testManualPaymentDuplicateProtection_preventsDoubleEntry() = runBlocking {
+        // Step 1: Create customer with initial credit obligation
+        val custResult = repository.recordCreditObligation(
+            customerName = "Kishore Kumar",
+            amount = Money.fromRupees(1000),
+            voiceTranscript = "Kishore 1000 credit"
+        )
+        assertTrue(custResult.isSuccess)
+        val obligation = custResult.getOrThrow()
+
+        val paymentAmount = Money.fromRupees(400)
+        val utr = "UPI/2026/TEST/DUPLICATE_UTR_123"
+        val timestamp = 1718000000000L
+
+        val evidence1 = PaymentEvidence(
+            imagePath = "",
+            extractedAmount = paymentAmount,
+            extractedSenderName = "Kishore Kumar",
+            utrNumber = utr,
+            ocrRawText = "Direct Payment: UPI",
+            paymentApp = "UPI",
+            timestamp = timestamp
+        )
+
+        // Verify not duplicate before recording
+        val existingBefore = repository.evidenceRepo.getAllEvidence().first()
+        val check1 = com.example.domain.reconciliation.DuplicateDetector.checkForDuplicate(evidence1, existingBefore)
+        org.junit.Assert.assertFalse(check1.isDuplicate)
+
+        // Settle first payment
+        val plan1 = com.example.domain.reconciliation.SettlementCalculator.calculate(
+            remainingAmount = obligation.remainingAmount,
+            paidAmount = paymentAmount
+        )
+        val settleResult1 = repository.executeAtomicSettlement(
+            evidence = evidence1,
+            obligationId = obligation.id,
+            settledAmount = plan1.settledAmount,
+            matchConfidence = 1.0f,
+            outcome = plan1.outcome
+        )
+        assertTrue(settleResult1.isSuccess)
+
+        val obAfterFirst = repository.obligationRepo.getObligationByIdDirect(obligation.id)
+        assertNotNull(obAfterFirst)
+        assertEquals(Money.fromRupees(600), obAfterFirst!!.remainingAmount)
+
+        // Attempt identical payment with same reference/UTR
+        val duplicateEvidence = PaymentEvidence(
+            imagePath = "",
+            extractedAmount = paymentAmount,
+            extractedSenderName = "Kishore Kumar",
+            utrNumber = utr,
+            ocrRawText = "Direct Payment: UPI",
+            paymentApp = "UPI",
+            timestamp = timestamp
+        )
+
+        val existingAfter = repository.evidenceRepo.getAllEvidence().first()
+        val checkDuplicate = com.example.domain.reconciliation.DuplicateDetector.checkForDuplicate(duplicateEvidence, existingAfter)
+        assertTrue("Duplicate detector must flag identical UTR", checkDuplicate.isDuplicate)
+        assertNotNull(checkDuplicate.reason)
+        assertTrue(checkDuplicate.reason!!.contains("DUPLICATE_UTR_123"))
+
+        // Also verify ExecuteSettlementUseCase blocks duplicate evidence
+        val secondSettleAttempt = executeSettlementUseCase.execute(
+            evidence = duplicateEvidence,
+            obligation = obAfterFirst,
+            customer = repository.customerRepo.getCustomerByIdDirect(obligation.customerId)!!
+        )
+        assertTrue("Second settlement with duplicate evidence must fail", secondSettleAttempt.isFailure)
+        assertTrue(
+            secondSettleAttempt.exceptionOrNull() is com.example.domain.usecase.DuplicatePaymentException
+        )
+
+        // Ensure remaining amount has NOT changed (was blocked as duplicate)
+        val obAfterSecond = repository.obligationRepo.getObligationByIdDirect(obligation.id)
+        assertNotNull(obAfterSecond)
+        assertEquals(Money.fromRupees(600), obAfterSecond!!.remainingAmount)
     }
 }
